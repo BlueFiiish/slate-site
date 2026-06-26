@@ -1,0 +1,98 @@
+---
+const EMAIL = "hello@slateandco.com";
+---
+
+<section class="closing on-dark" id="contact">
+  <div class="container container--feature closing__inner">
+    <p class="eyebrow reveal" data-reveal="fade">Let&rsquo;s start</p>
+    <h2 class="closing__headline reveal" data-delay="1">
+      Let&rsquo;s make your site the best thing about your business
+      &mdash; or at least not the worst.
+    </h2>
+    <p class="closing__sub reveal" data-delay="2">
+      Send me a link to your current site. I&rsquo;ll redesign one page of it and
+      show you the before and after, free. No pressure, no sales call you
+      didn&rsquo;t ask for.
+    </p>
+    <div class="closing__actions reveal" data-delay="3">
+      <a
+        class="btn btn--primary closing__btn"
+        href={`mailto:${EMAIL}?subject=Free%20redesign%20-%20my%20site&body=Here%20is%20my%20current%20site%3A%20`}
+      >
+        Get my free redesign
+      </a>
+      <a class="closing__email" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+    </div>
+  </div>
+
+  <div class="closing__glow" aria-hidden="true"></div>
+</section>
+
+<style>
+  .closing {
+    position: relative;
+    overflow: clip;
+    padding-block: clamp(6rem, 4rem + 12vw, 12rem);
+  }
+
+  .closing__inner {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    display: grid;
+    justify-items: center;
+  }
+
+  .closing__inner .eyebrow {
+    color: var(--accent-on-dark);
+  }
+
+  .closing__headline {
+    margin-top: var(--space-24);
+    font-size: clamp(2.25rem, 1.6rem + 3.4vw, 4rem);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    max-width: 20ch;
+  }
+
+  .closing__sub {
+    margin-top: var(--space-32);
+    font-size: var(--fs-lead);
+    line-height: 1.5;
+    color: var(--night-ink-2);
+    max-width: 52ch;
+  }
+
+  .closing__actions {
+    margin-top: var(--space-48);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-24);
+  }
+
+  .closing__email {
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--night-ink-2);
+    text-underline-offset: 3px;
+  }
+
+  .closing__email:hover {
+    color: var(--night-ink);
+    text-decoration: underline;
+  }
+
+  .closing__glow {
+    position: absolute;
+    inset: auto 0 -40% 0;
+    height: 80%;
+    z-index: 0;
+    background: radial-gradient(
+      50% 60% at 50% 100%,
+      color-mix(in srgb, var(--accent) 28%, transparent) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+</style>

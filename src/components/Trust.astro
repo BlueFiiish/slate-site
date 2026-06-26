@@ -1,0 +1,135 @@
+---
+const signals = [
+  {
+    title: "Built on Astro",
+    body: "The same modern stack behind sites that need to stay fast for years.",
+  },
+  {
+    title: "Green Core Web Vitals",
+    body: "Loads fast, holds still, responds instantly. Google&rsquo;s own health checks, passed.",
+  },
+  {
+    title: "WCAG AA accessible",
+    body: "Readable contrast, keyboard support, screen-reader friendly. Everyone gets in.",
+  },
+  {
+    title: "You own everything",
+    body: "The code, the domain, the content. No platform lock-in, no hostage situation.",
+  },
+];
+---
+
+<section class="trust section--tight" aria-labelledby="trust-heading">
+  <div class="container container--feature">
+    <header class="trust__head reveal" data-reveal="fade">
+      <p class="eyebrow">No fake badges</p>
+      <h2 class="trust__headline" id="trust-heading">
+        I&rsquo;d rather show you the receipts.
+      </h2>
+      <p class="lead measure trust__sub">
+        No stock logo wall, no &ldquo;#1 on Google&rdquo; promise I can&rsquo;t
+        keep. Just the things you can actually check.
+      </p>
+    </header>
+
+    <ul class="trust__strip">
+      {
+        signals.map((s, i) => (
+          <li class="trust__item reveal" data-delay={String((i % 3) + 1)}>
+            <h3 class="trust__item-title">{s.title}</h3>
+            <p class="trust__item-body" set:html={s.body} />
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="trust__note reveal" data-reveal="fade">
+      Real client reviews will live here as they come in. I&rsquo;d rather have an
+      empty space than a fake testimonial.
+    </p>
+  </div>
+</section>
+
+<style>
+  .trust {
+    padding-block: var(--section-y-tight);
+  }
+
+  .trust__head {
+    max-width: 46ch;
+  }
+
+  .trust__headline {
+    margin-top: var(--space-16);
+  }
+
+  .trust__sub {
+    margin-top: var(--space-24);
+  }
+
+  .trust__strip {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4rem);
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  @media (min-width: 640px) {
+    .trust__strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .trust__strip {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .trust__item {
+    padding: var(--space-32) var(--space-24) var(--space-32) 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  @media (min-width: 640px) {
+    .trust__item {
+      border-bottom: 0;
+      border-right: 1px solid var(--hairline);
+      padding-block: var(--space-8) var(--space-32);
+    }
+    .trust__item:nth-child(2) {
+      border-right: 0;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .trust__item {
+      padding-right: var(--space-24);
+    }
+    .trust__item:nth-child(2) {
+      border-right: 1px solid var(--hairline);
+    }
+    .trust__item:last-child {
+      border-right: 0;
+    }
+  }
+
+  .trust__item-title {
+    font-size: var(--fs-h3);
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  }
+
+  .trust__item-body {
+    margin-top: var(--space-12);
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+    max-width: 28ch;
+  }
+
+  .trust__note {
+    margin-top: clamp(2rem, 1.5rem + 3vw, 3rem);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+    max-width: 50ch;
+  }
+</style>

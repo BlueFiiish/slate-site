@@ -1,0 +1,134 @@
+---
+const truths = [
+  {
+    n: "01",
+    title: "It crawls on a phone.",
+    body: "Most people find you on their phone, standing in a parking lot. If the page takes five seconds to load, they are already calling someone else.",
+  },
+  {
+    n: "02",
+    title: "It looks like a template.",
+    body: "The drag-and-drop builder did its job, but it gave you the same layout as ten thousand other businesses. Nothing on the page says this place is any good.",
+  },
+  {
+    n: "03",
+    title: "Nobody has touched it in years.",
+    body: "The hours are wrong. The photos are from a different season. A small business that looks neglected online reads as a small business that might be gone.",
+  },
+];
+---
+
+<section class="problem on-dark section">
+  <div class="container container--feature">
+    <header class="problem__head reveal" data-reveal="fade">
+      <p class="eyebrow">The honest part</p>
+      <h2 class="problem__headline measure">
+        Most small businesses are better than their website makes them look.
+      </h2>
+    </header>
+
+    <ol class="problem__list">
+      {
+        truths.map((t, i) => (
+          <li class="problem__item reveal" data-delay={String(i + 1)}>
+            <span class="problem__n" aria-hidden="true">
+              {t.n}
+            </span>
+            <div class="problem__text">
+              <h3 class="problem__item-title">{t.title}</h3>
+              <p class="problem__item-body">{t.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="problem__close reveal" data-reveal="fade">
+      A bad site quietly costs a good business &mdash; one customer at a time,
+      where you never see it happen.
+    </p>
+  </div>
+</section>
+
+<style>
+  .problem__head {
+    max-width: 18ch;
+  }
+
+  .problem__headline {
+    margin-top: var(--space-16);
+    max-width: 20ch;
+  }
+
+  @media (min-width: 768px) {
+    .problem__head {
+      max-width: none;
+    }
+  }
+
+  .problem__list {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    display: grid;
+    gap: 0;
+  }
+
+  .problem__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-24);
+    align-items: start;
+    padding-block: var(--space-32);
+    border-top: 1px solid var(--night-hairline);
+  }
+
+  .problem__item:last-child {
+    border-bottom: 1px solid var(--night-hairline);
+  }
+
+  @media (min-width: 768px) {
+    .problem__item {
+      grid-template-columns: 5rem minmax(0, 30ch) 1fr;
+      gap: var(--space-48);
+      align-items: baseline;
+    }
+  }
+
+  .problem__n {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 500;
+    color: var(--accent-on-dark);
+    font-feature-settings: "tnum";
+  }
+
+  .problem__text {
+    display: contents;
+  }
+
+  .problem__item-title {
+    font-size: var(--fs-h3);
+    color: var(--night-ink);
+  }
+
+  .problem__item-body {
+    color: var(--night-ink-2);
+    max-width: 52ch;
+    margin-top: var(--space-8);
+  }
+
+  @media (min-width: 768px) {
+    .problem__item-body {
+      margin-top: 0;
+    }
+  }
+
+  .problem__close {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--night-ink);
+    max-width: 32ch;
+  }
+</style>

@@ -1,0 +1,15 @@
+# build output
+dist/
+# deps
+node_modules/
+# astro
+.astro/
+# scratch verification artifacts (screenshots, lighthouse json)
+.verify/
+# root-level scratch captures (not used by the build)
+/slate-hero.png
+/slate-desktop-full.png
+/slate-mobile-full.png
+# os / editor
+.DS_Store
+*.log

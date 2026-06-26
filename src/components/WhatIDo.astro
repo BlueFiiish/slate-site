@@ -1,0 +1,110 @@
+---
+const services = [
+  {
+    label: "01 / Build",
+    title: "A full rebuild",
+    body: "A new site, designed and built from scratch around what your business actually does. Fast, mobile-first, easy to read, and easy for customers to act on. You own every file when it ships.",
+    note: "Most builds land around $2,500.",
+  },
+  {
+    label: "02 / Keep",
+    title: "A care plan",
+    body: "Hosting, backups, updates, and the small edits that pile up: new hours, a price change, a fresh batch of photos. You text me, it gets done. No ticket queue, no portal.",
+    note: "Care plans start around $299 a month.",
+  },
+  {
+    label: "03 / Grow",
+    title: "Marketing basics",
+    body: "The unglamorous things that actually move the needle: your Google Business Profile, real local SEO, reviews, and the page that turns a visitor into a phone call. Done right, not stuffed with keywords.",
+    note: "Bundled into the care plan, or one-off.",
+  },
+];
+---
+
+<section class="whatido section" id="services">
+  <div class="container container--feature">
+    <header class="whatido__head reveal" data-reveal="fade">
+      <p class="eyebrow">What I do</p>
+      <h2 class="whatido__headline">Design, build, and keep it running.</h2>
+      <p class="lead measure whatido__sub">
+        Three ways to work together. No long contracts, and you reach the person
+        who built it &mdash; me, not a help desk.
+      </p>
+    </header>
+
+    <div class="whatido__list">
+      {
+        services.map((s, i) => (
+          <article class="whatido__row reveal" data-delay={String(i + 1)}>
+            <p class="eyebrow eyebrow--muted whatido__label">{s.label}</p>
+            <div class="whatido__body">
+              <h3 class="whatido__title">{s.title}</h3>
+              <p class="whatido__text measure">{s.body}</p>
+              <p class="whatido__note">{s.note}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .whatido__head {
+    max-width: 46ch;
+  }
+
+  .whatido__headline {
+    margin-top: var(--space-16);
+  }
+
+  .whatido__sub {
+    margin-top: var(--space-24);
+  }
+
+  .whatido__list {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+  }
+
+  .whatido__row {
+    display: grid;
+    gap: var(--space-16);
+    padding-block: clamp(2rem, 1.5rem + 2vw, 3rem);
+    border-top: 1px solid var(--hairline);
+  }
+
+  .whatido__row:last-child {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  @media (min-width: 768px) {
+    .whatido__row {
+      grid-template-columns: 12rem 1fr;
+      gap: var(--space-48);
+      align-items: start;
+    }
+  }
+
+  .whatido__label {
+    padding-top: var(--space-4);
+  }
+
+  .whatido__title {
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  .whatido__text {
+    margin-top: var(--space-16);
+    font-size: var(--fs-body-l);
+    color: var(--ink-2);
+  }
+
+  .whatido__note {
+    margin-top: var(--space-16);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--accent);
+  }
+</style>

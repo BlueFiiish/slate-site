@@ -1,0 +1,275 @@
+---
+const steps = [
+  {
+    n: "01",
+    title: "Listen",
+    body: "We talk for half an hour. What you do, who your customers are, what is working, and what is quietly costing you. No jargon, no pitch deck.",
+  },
+  {
+    n: "02",
+    title: "Design",
+    body: "I design the real pages around your real content and photos. You see a true preview, not a stock mockup. We refine until it feels like you.",
+  },
+  {
+    n: "03",
+    title: "Build",
+    body: "I build it in Astro: fast, accessible, and clean under the hood. It is tested on real phones from 320 pixels up before it ever goes live.",
+  },
+  {
+    n: "04",
+    title: "Keep sharp",
+    body: "Launch is the start. Hours change, photos pile up, seasons turn. On a care plan I keep it current so it never goes stale again.",
+  },
+];
+---
+
+<section class="process section" id="process">
+  <div class="container container--feature">
+    <header class="process__head reveal" data-reveal="fade">
+      <p class="eyebrow">How it goes</p>
+      <h2 class="process__headline">Four steps, no mystery.</h2>
+    </header>
+
+    <div class="process__body">
+      <ol class="process__steps">
+        <span class="process__line" aria-hidden="true">
+          <span class="process__line-fill"></span>
+        </span>
+        {
+          steps.map((s, i) => (
+            <li class="process__step reveal" data-delay={String((i % 3) + 1)}>
+              <span class="process__dot" aria-hidden="true">
+                {s.n}
+              </span>
+              <div class="process__step-text">
+                <h3 class="process__step-title">{s.title}</h3>
+                <p class="process__step-body">{s.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <!-- Type-specimen + swatch "receipt": proof of system thinking -->
+      <aside class="specimen reveal" data-delay="2" aria-label="A look at the design system behind every build">
+        <p class="eyebrow eyebrow--muted">The system behind it</p>
+
+        <div class="specimen__type">
+          <span class="specimen__aa">Aa</span>
+          <div class="specimen__type-meta">
+            <p class="specimen__type-name">Fraunces &amp; Inter Tight</p>
+            <p class="specimen__type-desc">An editorial serif, set tight, on a clean workhorse sans.</p>
+          </div>
+        </div>
+
+        <div class="specimen__scale" aria-hidden="true">
+          <span style="font-size:2rem">Display</span>
+          <span style="font-size:1.375rem">Heading</span>
+          <span style="font-size:1.0625rem">Body copy, set at a comfortable measure.</span>
+          <span style="font-size:0.8125rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent)">Eyebrow</span>
+        </div>
+
+        <div class="specimen__swatches">
+          <span class="swatch" style="--c: var(--paper)"><em>Paper</em></span>
+          <span class="swatch" style="--c: var(--ink); color: var(--paper)"><em>Ink</em></span>
+          <span class="swatch" style="--c: var(--accent); color: var(--paper)"><em>Accent</em></span>
+          <span class="swatch" style="--c: var(--night); color: var(--paper)"><em>Night</em></span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process__head {
+    max-width: 40ch;
+  }
+
+  .process__headline {
+    margin-top: var(--space-16);
+  }
+
+  .process__body {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    display: grid;
+    gap: clamp(2.5rem, 1rem + 5vw, 5rem);
+  }
+
+  @media (min-width: 1024px) {
+    .process__body {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+      gap: clamp(3rem, 1rem + 4vw, 6rem);
+    }
+  }
+
+  .process__steps {
+    position: relative;
+    display: grid;
+    gap: var(--space-48);
+    padding-left: var(--space-8);
+  }
+
+  .process__line {
+    position: absolute;
+    left: calc(1.4rem - 1px);
+    top: 1.4rem;
+    bottom: 1.4rem;
+    width: 2px;
+    background: var(--hairline);
+    overflow: hidden;
+  }
+
+  .process__line-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  /* Fill the connecting line as the list scrolls through the viewport. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .process__line-fill {
+        animation: line-fill linear both;
+        animation-timeline: view(block);
+        animation-range: cover 12% cover 78%;
+      }
+      @keyframes line-fill {
+        to {
+          transform: scaleY(1);
+        }
+      }
+    }
+    /* Fallback: when the steps container is revealed, fill it. */
+    :global(html.no-scroll-timeline) .process__steps.is-in .process__line-fill {
+      transition: transform var(--dur-slow) var(--ease-out);
+      transform: scaleY(1);
+    }
+  }
+
+  .process__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-24);
+    align-items: start;
+  }
+
+  .process__dot {
+    display: grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--ink-2);
+    font-feature-settings: "tnum";
+    z-index: 1;
+  }
+
+  .process__step-title {
+    font-size: var(--fs-h3);
+    padding-top: var(--space-4);
+  }
+
+  .process__step-body {
+    margin-top: var(--space-12);
+    color: var(--ink-2);
+    max-width: 46ch;
+  }
+
+  /* ---- Specimen receipt ---- */
+  .specimen {
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--space-32);
+    background: var(--paper-2);
+  }
+
+  @media (min-width: 1024px) {
+    .specimen {
+      position: sticky;
+      top: clamp(6rem, 12vh, 8rem);
+    }
+  }
+
+  .specimen__type {
+    margin-top: var(--space-24);
+    display: flex;
+    align-items: center;
+    gap: var(--space-24);
+    padding-bottom: var(--space-24);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .specimen__aa {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .specimen__type-name {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .specimen__type-desc {
+    margin-top: var(--space-4);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+  }
+
+  .specimen__scale {
+    display: grid;
+    gap: var(--space-12);
+    padding-block: var(--space-24);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .specimen__scale > span:not(:last-child) {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .specimen__scale > span:nth-child(3) {
+    font-family: var(--font-body);
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+
+  .specimen__swatches {
+    margin-top: var(--space-24);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-8);
+  }
+
+  .swatch {
+    display: flex;
+    align-items: flex-end;
+    aspect-ratio: 1;
+    padding: var(--space-8);
+    border-radius: var(--radius-sm);
+    background: var(--c);
+    border: 1px solid var(--hairline);
+    color: var(--ink-2);
+  }
+
+  .swatch em {
+    font-style: normal;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+</style>

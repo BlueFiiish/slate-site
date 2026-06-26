@@ -1,0 +1,141 @@
+---
+const EMAIL = "hello@slateandco.com";
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container container--feature footer__inner">
+    <div class="footer__brand">
+      <a class="footer__word" href="#top">
+        <span class="footer__mark" aria-hidden="true">S</span>
+        Slate<span class="visually-hidden">&nbsp;&mdash; back to top</span>
+      </a>
+      <p class="footer__tagline">
+        An independent web studio. I build honest sites for small businesses, and
+        I keep them running.
+      </p>
+      <a class="footer__email" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+    </div>
+
+    <nav class="footer__nav" aria-label="Footer">
+      <p class="footer__nav-title">Go to</p>
+      <ul>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#free-redesign">Free redesign</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="container container--feature footer__base">
+    <p>&copy; {year} Slate. Built in Astro, by hand.</p>
+    <a class="footer__top" href="#top">Back to top &uarr;</a>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--paper-2);
+    border-top: 1px solid var(--hairline);
+    padding-top: var(--section-y-tight);
+  }
+
+  .footer__inner {
+    display: grid;
+    gap: var(--space-48);
+  }
+
+  @media (min-width: 768px) {
+    .footer__inner {
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: var(--space-64);
+    }
+  }
+
+  .footer__word {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-12);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .footer__mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 1.0625rem;
+  }
+
+  .footer__tagline {
+    margin-top: var(--space-24);
+    color: var(--ink-2);
+    max-width: 44ch;
+  }
+
+  .footer__email {
+    display: inline-block;
+    margin-top: var(--space-24);
+    font-weight: 600;
+    color: var(--accent);
+    text-underline-offset: 3px;
+  }
+
+  .footer__email:hover {
+    text-decoration: underline;
+  }
+
+  .footer__nav-title {
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .footer__nav ul {
+    margin-top: var(--space-16);
+    display: grid;
+    gap: var(--space-12);
+  }
+
+  .footer__nav a {
+    color: var(--ink-2);
+    font-size: var(--fs-small);
+  }
+
+  .footer__nav a:hover {
+    color: var(--ink);
+  }
+
+  .footer__base {
+    margin-top: var(--section-y-tight);
+    padding-block: var(--space-32);
+    border-top: 1px solid var(--hairline);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-16);
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+  }
+
+  .footer__top {
+    color: var(--ink-2);
+  }
+
+  .footer__top:hover {
+    color: var(--ink);
+  }
+</style>

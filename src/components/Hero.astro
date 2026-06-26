@@ -1,0 +1,167 @@
+---
+import DeviceMockup from "./DeviceMockup.astro";
+import anaDesktop from "../assets/captures/ana-desktop-top.png";
+---
+
+<section class="hero" id="top">
+  <div class="hero__inner container container--feature">
+    <div class="hero__copy">
+      <p class="eyebrow load-in" style="--load-delay: 60ms">
+        Independent web studio
+      </p>
+      <h1 class="hero__headline load-in" style="--load-delay: 120ms">
+        Websites that make a small business look like the real deal.
+      </h1>
+      <p class="lead hero__lead measure load-in" style="--load-delay: 220ms">
+        I design, build, and look after honest, fast websites for small
+        businesses. No agency overhead, no templates. You work with the person
+        who actually builds it.
+      </p>
+      <div class="hero__actions load-in" style="--load-delay: 320ms">
+        <a class="btn btn--primary" href="#contact">Get my free redesign</a>
+        <a class="text-link" href="#free-redesign">
+          See real before / afters
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M3 8h9M9 4l4 4-4 4"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero__stage load-in" style="--load-delay: 380ms">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="hero__device">
+        <DeviceMockup
+          device="macbook"
+          src={anaDesktop}
+          alt="The Ana's Confections website Slate built, shown on a laptop."
+          priority={true}
+          width={1120}
+          sizes="(min-width: 1024px) 600px, 92vw"
+        />
+      </div>
+      <p class="hero__caption">
+        A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    padding-top: clamp(2.5rem, 1rem + 6vw, 5rem);
+    padding-bottom: var(--section-y-tight);
+    overflow: clip;
+  }
+
+  .hero__inner {
+    display: grid;
+    gap: clamp(2.5rem, 1rem + 6vw, 5rem);
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero__inner {
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: clamp(3rem, 1rem + 4vw, 5.5rem);
+    }
+  }
+
+  .hero__headline {
+    margin-top: var(--space-24);
+    /* keep the editorial line breaks tight on large screens */
+    max-width: 16ch;
+  }
+
+  @media (min-width: 1024px) {
+    .hero__headline {
+      max-width: none;
+    }
+  }
+
+  .hero__lead {
+    margin-top: var(--space-24);
+  }
+
+  .hero__actions {
+    margin-top: var(--space-32);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-24);
+  }
+
+  /* ---- Stage + device ---- */
+  .hero__stage {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .hero__glow {
+    position: absolute;
+    inset: -18% -12% -22%;
+    z-index: -1;
+    background:
+      radial-gradient(
+        60% 55% at 70% 30%,
+        var(--accent-tint) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        50% 50% at 25% 80%,
+        color-mix(in srgb, var(--accent-tint) 60%, transparent) 0%,
+        transparent 70%
+      );
+    filter: blur(6px);
+  }
+
+  .hero__device {
+    transform: rotate(-1.2deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__device {
+      transform: none;
+    }
+  }
+
+  .hero__caption {
+    margin-top: var(--space-24);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+    text-align: center;
+  }
+
+  .hero__caption strong {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+
+  /* Subtle parallax on the device as the hero scrolls away (gated). */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .hero__device {
+        animation: hero-parallax linear both;
+        animation-timeline: view();
+        animation-range: entry 100% exit 100%;
+      }
+      @keyframes hero-parallax {
+        to {
+          transform: translateY(-26px) rotate(-1.2deg);
+        }
+      }
+    }
+  }
+</style>

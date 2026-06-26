@@ -1,0 +1,137 @@
+---
+// Sticky nav. Transparent over the hero, gains a paper background + hairline
+// after ~80px of scroll using a CSS scroll-timeline (no JS). On browsers
+// without scroll-timeline it simply stays in its solid state (set on the
+// no-scroll-timeline path below), which is a perfectly good fallback.
+---
+
+<header class="nav" id="site-nav">
+  <div class="nav__inner container--feature container">
+    <a class="nav__brand" href="#top">
+      <span class="nav__mark" aria-hidden="true">S</span>
+      <span class="nav__word">Slate</span>
+      <span class="visually-hidden">&nbsp;&mdash; back to top</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#work">Work</a>
+      <a href="#free-redesign">Free redesign</a>
+      <a href="#process">Process</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#about">About</a>
+    </nav>
+
+    <a class="btn btn--primary nav__cta" href="#contact">Get my free redesign</a>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    /* Drives the scroll-linked background swap. */
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background-color var(--dur-micro) var(--ease-out),
+      border-color var(--dur-micro) var(--ease-out);
+  }
+
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-24);
+    min-height: 72px;
+    padding-block: var(--space-12);
+  }
+
+  .nav__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-12);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-right: auto;
+  }
+
+  .nav__mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .nav__links {
+    display: none;
+    gap: var(--space-32);
+    font-size: var(--fs-small);
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .nav__links a {
+    position: relative;
+    padding-block: var(--space-8);
+    transition: color var(--dur-micro) var(--ease-out);
+  }
+
+  .nav__links a:hover {
+    color: var(--ink);
+  }
+
+  .nav__cta {
+    display: none;
+    min-height: 44px;
+    padding: var(--space-12) var(--space-24);
+    font-size: var(--fs-small);
+  }
+
+  @media (min-width: 768px) {
+    .nav__links {
+      display: flex;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .nav__cta {
+      display: inline-flex;
+    }
+  }
+
+  /* --- Scroll-linked background swap (native, no JS) --- */
+  @supports (animation-timeline: scroll()) {
+    .nav {
+      animation: nav-solidify linear both;
+      animation-timeline: scroll(root);
+      /* Solidifies across the first ~120px of scroll. */
+      animation-range: 0 120px;
+    }
+  }
+
+  @keyframes nav-solidify {
+    to {
+      background-color: color-mix(in srgb, var(--paper) 88%, transparent);
+      border-bottom-color: var(--hairline);
+      -webkit-backdrop-filter: saturate(1.4) blur(8px);
+      backdrop-filter: saturate(1.4) blur(8px);
+    }
+  }
+
+  /* Fallback: solid from the start so it never reads as broken. */
+  :global(html.no-scroll-timeline) .nav {
+    background-color: color-mix(in srgb, var(--paper) 92%, transparent);
+    border-bottom-color: var(--hairline);
+    -webkit-backdrop-filter: saturate(1.4) blur(8px);
+    backdrop-filter: saturate(1.4) blur(8px);
+  }
+</style>

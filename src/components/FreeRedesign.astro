@@ -1,0 +1,146 @@
+---
+import CompareSlider from "./CompareSlider.astro";
+import anaBefore from "../assets/captures/ana-before-desktop.png";
+import anaAfter from "../assets/captures/ana-desktop-full.png";
+
+const beats = [
+  {
+    title: "Same business. Same cakes. Same Ana.",
+    body: "Nothing about Ana's Confections changed. The recipes, the storefront on Third Street, the five-star reviews — all the same. The only thing that changed is what a stranger sees first.",
+  },
+  {
+    title: "The old site buried the good stuff.",
+    body: "A centered template, a stock-looking headline, and a cookie banner over the hero. You had to scroll and squint to learn this was a real bakery run by a real person.",
+  },
+  {
+    title: "The new one leads with proof.",
+    body: "Ana piping a cake, the headline that says exactly what she does, the reviews right up top, and one obvious button to order. Same content, finally working for her.",
+  },
+  {
+    title: "I will do this for your site. Free.",
+    body: "Send me your current site. I will redesign one real page of it and show you the before and after — no charge, no pressure. If you like it, we build the rest. If not, you keep the mockup.",
+  },
+];
+---
+
+<section class="freeredesign" id="free-redesign">
+  <div class="freeredesign__grid container container--feature">
+    <!-- Sticky pinned visual -->
+    <div class="freeredesign__sticky">
+      <div class="freeredesign__visual">
+        <p class="eyebrow freeredesign__kicker">Drag to compare</p>
+        <CompareSlider
+          before={anaBefore}
+          after={anaAfter}
+          beforeAlt="The original Ana's Confections website: a centered template with a stock-style headline and a cookie banner over the hero."
+          afterAlt="The Slate rebuild of Ana's Confections: Ana piping a cake, a clear headline, reviews up top, and an obvious order button."
+        />
+      </div>
+    </div>
+
+    <!-- Scrolling narrative -->
+    <div class="freeredesign__story">
+      <header class="freeredesign__intro reveal" data-reveal="fade">
+        <p class="eyebrow">The free redesign</p>
+        <h2 class="freeredesign__headline">
+          I&rsquo;ll redesign a page of your site. Free.
+        </h2>
+        <p class="lead measure">
+          Here is one I already did. Drag the slider on the left to see the same
+          bakery, before and after.
+        </p>
+      </header>
+
+      {
+        beats.map((b, i) => (
+          <div class="freeredesign__beat reveal" data-delay={String((i % 3) + 1)}>
+            <span class="freeredesign__beat-n" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3 class="freeredesign__beat-title">{b.title}</h3>
+            <p class="freeredesign__beat-body measure">{b.body}</p>
+          </div>
+        ))
+      }
+
+      <div class="freeredesign__cta reveal" data-reveal="fade">
+        <a class="btn btn--primary" href="#contact">Get my free redesign</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .freeredesign {
+    background: var(--paper-2);
+    padding-block: var(--section-y);
+  }
+
+  .freeredesign__grid {
+    display: grid;
+    gap: clamp(2.5rem, 1rem + 6vw, 5rem);
+  }
+
+  @media (min-width: 1024px) {
+    .freeredesign__grid {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: clamp(3rem, 1rem + 4vw, 6rem);
+      align-items: start;
+    }
+  }
+
+  .freeredesign__sticky {
+    position: static;
+  }
+
+  @media (min-width: 1024px) {
+    .freeredesign__sticky {
+      position: sticky;
+      top: clamp(6rem, 14vh, 9rem);
+    }
+  }
+
+  .freeredesign__kicker {
+    margin-bottom: var(--space-12);
+    color: var(--ink-3);
+  }
+
+  .freeredesign__intro {
+    margin-bottom: clamp(2rem, 1rem + 4vw, 4rem);
+  }
+
+  .freeredesign__headline {
+    margin-top: var(--space-16);
+    margin-bottom: var(--space-24);
+  }
+
+  .freeredesign__beat {
+    padding-block: clamp(2rem, 1.5rem + 3vw, 3.5rem);
+    border-top: 1px solid var(--hairline);
+  }
+
+  .freeredesign__beat-n {
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--accent);
+    font-feature-settings: "tnum";
+  }
+
+  .freeredesign__beat-title {
+    margin-top: var(--space-8);
+    font-size: clamp(1.5rem, 1.3rem + 1vw, 1.9rem);
+    line-height: 1.2;
+  }
+
+  .freeredesign__beat-body {
+    margin-top: var(--space-12);
+    color: var(--ink-2);
+    font-size: var(--fs-body-l);
+  }
+
+  .freeredesign__cta {
+    padding-top: clamp(2rem, 1.5rem + 3vw, 3.5rem);
+    border-top: 1px solid var(--hairline);
+  }
+</style>

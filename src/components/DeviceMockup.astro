@@ -1,0 +1,177 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+export interface Props {
+  device: "macbook" | "iphone";
+  src: ImageMetadata;
+  alt: string;
+  /** Eager-load + high priority (use only for the hero mockup). */
+  priority?: boolean;
+  /** Responsive sizes hint. */
+  sizes?: string;
+  width?: number;
+}
+
+const {
+  device,
+  src,
+  alt,
+  priority = false,
+  sizes = "(min-width: 1024px) 560px, 90vw",
+  width = 1120,
+} = Astro.props;
+---
+
+{
+  device === "macbook" ? (
+    <figure class="mockup mockup--macbook">
+      <div class="mockup__laptop">
+        <div class="mockup__screen">
+          <span class="mockup__notch" aria-hidden="true" />
+          <div class="mockup__viewport">
+            <Image
+              src={src}
+              alt={alt}
+              width={width}
+              sizes={sizes}
+              loading={priority ? "eager" : "lazy"}
+              fetchpriority={priority ? "high" : "auto"}
+              format="avif"
+            />
+          </div>
+        </div>
+        <div class="mockup__base" aria-hidden="true">
+          <span class="mockup__hinge" />
+        </div>
+      </div>
+    </figure>
+  ) : (
+    <figure class="mockup mockup--iphone">
+      <div class="mockup__phone">
+        <span class="mockup__dynamic-island" aria-hidden="true" />
+        <div class="mockup__viewport">
+          <Image
+            src={src}
+            alt={alt}
+            width={width}
+            sizes={sizes}
+            loading={priority ? "eager" : "lazy"}
+            fetchpriority={priority ? "high" : "auto"}
+            format="avif"
+          />
+        </div>
+      </div>
+    </figure>
+  )
+}
+
+<style>
+  .mockup {
+    margin: 0;
+  }
+
+  /* ---- MacBook ---- */
+  .mockup--macbook {
+    width: 100%;
+  }
+
+  .mockup__laptop {
+    width: 100%;
+  }
+
+  .mockup__screen {
+    position: relative;
+    border-radius: 18px;
+    padding: 10px 10px 10px;
+    background: linear-gradient(160deg, #2c2c30, #161618);
+    box-shadow: var(--shadow-3);
+  }
+
+  .mockup__notch {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28%;
+    height: 14px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background: #161618;
+    z-index: 2;
+  }
+
+  .mockup__viewport {
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--paper);
+    aspect-ratio: 16 / 10;
+  }
+
+  .mockup__viewport :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .mockup__base {
+    position: relative;
+    height: 14px;
+    margin: 0 -3.2%;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background: linear-gradient(180deg, #c9c8c4, #a7a6a1 60%, #87867f);
+  }
+
+  .mockup__hinge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16%;
+    height: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background: #8b8a84;
+  }
+
+  /* ---- iPhone ---- */
+  .mockup--iphone {
+    width: 100%;
+  }
+
+  .mockup__phone {
+    position: relative;
+    border-radius: 44px;
+    padding: 10px;
+    background: linear-gradient(160deg, #2c2c30, #161618);
+    box-shadow: var(--shadow-3);
+  }
+
+  .mockup__dynamic-island {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34%;
+    height: 22px;
+    border-radius: var(--radius-pill);
+    background: #0c0c0e;
+    z-index: 2;
+  }
+
+  .mockup__phone .mockup__viewport {
+    overflow: hidden;
+    border-radius: 36px;
+    aspect-ratio: 9 / 19.5;
+    background: var(--paper);
+  }
+
+  .mockup__phone .mockup__viewport :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+</style>

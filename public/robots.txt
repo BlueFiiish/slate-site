@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bluefiiish.github.io/slate-site/sitemap-index.xml

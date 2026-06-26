@@ -1,0 +1,328 @@
+---
+import DeviceMockup from "./DeviceMockup.astro";
+import anaMobile from "../assets/captures/ana-mobile-top.png";
+---
+
+<section class="work section" id="work">
+  <div class="container container--feature">
+    <header class="work__head reveal" data-reveal="fade">
+      <p class="eyebrow">Work</p>
+      <h2 class="work__headline">A small shop of real rebuilds.</h2>
+      <p class="lead measure work__sub">
+        I am building this studio one honest project at a time. Here is the work
+        so far &mdash; shown as what it is.
+      </p>
+    </header>
+
+    <div class="bento">
+      <!-- Flagship: Ana's Confections -->
+      <article class="bento__cell bento__cell--feature reveal" data-delay="1">
+        <div class="bento__feature-grid">
+          <div class="bento__feature-copy">
+            <p class="eyebrow eyebrow--muted">Flagship rebuild &middot; Live</p>
+            <h3 class="bento__feature-title">Ana&rsquo;s Confections</h3>
+            <p class="bento__feature-body">
+              A custom-cake bakery and coffee shop in Rosenberg, Texas. Rebuilt
+              from a generic template into a fast, photo-led site that leads with
+              Ana&rsquo;s work and her reviews.
+            </p>
+            <ul class="bento__tags">
+              <li>Astro</li>
+              <li>Custom design</li>
+              <li>Online ordering</li>
+            </ul>
+            <a
+              class="text-link"
+              href="https://bluefiiish.github.io/"
+              target="_blank"
+              rel="noopener"
+            >
+              Visit the live site
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M4 10 10 4M5 4h5v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </a>
+          </div>
+          <div class="bento__feature-device">
+            <DeviceMockup
+              device="iphone"
+              src={anaMobile}
+              alt="Ana's Confections rebuilt by Slate, shown on a phone."
+              width={700}
+              sizes="(min-width: 1024px) 240px, 50vw"
+            />
+          </div>
+        </div>
+      </article>
+
+      <!-- Lighthouse receipt -->
+      <article class="bento__cell bento__cell--receipt reveal" data-delay="2">
+        <p class="eyebrow eyebrow--muted">Measured, not claimed</p>
+        <div class="receipt">
+          <div class="receipt__row">
+            <span>Performance</span>
+            <strong class="receipt__score">99</strong>
+          </div>
+          <div class="receipt__row">
+            <span>Accessibility</span>
+            <strong class="receipt__score">100</strong>
+          </div>
+          <div class="receipt__row">
+            <span>Best practices</span>
+            <strong class="receipt__score">100</strong>
+          </div>
+          <div class="receipt__row">
+            <span>SEO</span>
+            <strong class="receipt__score">100</strong>
+          </div>
+        </div>
+        <p class="receipt__caption">
+          Lighthouse on the Ana rebuild. Your numbers go right here.
+        </p>
+      </article>
+
+      <!-- Metric -->
+      <article class="bento__cell bento__cell--metric reveal" data-delay="3">
+        <p class="bento__metric-num">~1&nbsp;s</p>
+        <p class="bento__metric-label">
+          Time to first paint on a phone, on a normal connection. The old site
+          took five.
+        </p>
+      </article>
+
+      <!-- Second project placeholder (honest) -->
+      <article class="bento__cell bento__cell--soon reveal" data-delay="2">
+        <span class="bento__soon-frame" aria-hidden="true"></span>
+        <p class="eyebrow eyebrow--muted">In the works</p>
+        <h3 class="bento__soon-title">Your business here</h3>
+        <p class="bento__soon-body">
+          The next rebuild is open. It could be yours &mdash; start with the free
+          redesign and find out.
+        </p>
+      </article>
+
+      <!-- Tech / trust badge -->
+      <article class="bento__cell bento__cell--tech reveal" data-delay="3">
+        <p class="eyebrow eyebrow--muted">Built on</p>
+        <p class="bento__tech-line">
+          Astro &middot; clean HTML &middot; near-zero JavaScript
+        </p>
+        <p class="bento__tech-body">
+          The same stack used by sites that need to be fast and last. No bloated
+          builder, no monthly platform lock-in. You own the code.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .work__head {
+    max-width: 46ch;
+  }
+
+  .work__headline {
+    margin-top: var(--space-16);
+  }
+
+  .work__sub {
+    margin-top: var(--space-24);
+  }
+
+  .bento {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-24);
+  }
+
+  @media (min-width: 720px) {
+    .bento {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bento {
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: minmax(0, auto);
+    }
+  }
+
+  .bento__cell {
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--space-32);
+    background: var(--paper);
+    transition: transform var(--dur-micro) var(--ease-out),
+      border-color var(--dur-micro) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bento__cell:hover {
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--ink) 22%, var(--hairline));
+    }
+  }
+
+  /* Feature cell spans 2 cols + 2 rows on desktop. */
+  .bento__cell--feature {
+    background: var(--paper-2);
+  }
+
+  @media (min-width: 1024px) {
+    .bento__cell--feature {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+  }
+
+  .bento__feature-grid {
+    display: grid;
+    gap: var(--space-32);
+    height: 100%;
+    align-items: center;
+  }
+
+  @media (min-width: 540px) {
+    .bento__feature-grid {
+      grid-template-columns: 1fr auto;
+    }
+  }
+
+  .bento__feature-title {
+    margin-top: var(--space-12);
+    font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .bento__feature-body {
+    margin-top: var(--space-16);
+    color: var(--ink-2);
+    max-width: 42ch;
+  }
+
+  .bento__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-top: var(--space-24);
+  }
+
+  .bento__tags li {
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+    padding: 6px var(--space-12);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-pill);
+  }
+
+  .bento__feature-grid .text-link {
+    margin-top: var(--space-24);
+  }
+
+  .bento__feature-device {
+    width: clamp(140px, 38vw, 200px);
+    justify-self: center;
+  }
+
+  /* Receipt cell */
+  .receipt {
+    margin-top: var(--space-24);
+    display: grid;
+    gap: var(--space-12);
+  }
+
+  .receipt__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-16);
+    padding-bottom: var(--space-12);
+    border-bottom: 1px solid var(--hairline);
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+  }
+
+  .receipt__row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .receipt__score {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-feature-settings: "tnum";
+  }
+
+  .receipt__caption {
+    margin-top: var(--space-24);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+  }
+
+  /* Metric cell */
+  .bento__cell--metric {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .bento__metric-num {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 2.4rem + 3vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .bento__metric-label {
+    margin-top: var(--space-16);
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+    max-width: 30ch;
+  }
+
+  /* Soon cell */
+  .bento__cell--soon {
+    position: relative;
+    border-style: dashed;
+    background: transparent;
+  }
+
+  .bento__soon-title {
+    margin-top: var(--space-12);
+    font-size: var(--fs-h3);
+    color: var(--ink-2);
+  }
+
+  .bento__soon-body {
+    margin-top: var(--space-12);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+    max-width: 32ch;
+  }
+
+  /* Tech cell */
+  .bento__tech-line {
+    margin-top: var(--space-12);
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .bento__tech-body {
+    margin-top: var(--space-16);
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+    max-width: 34ch;
+  }
+</style>

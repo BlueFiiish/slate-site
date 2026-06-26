@@ -1,0 +1,110 @@
+---
+---
+
+<section class="about section" id="about">
+  <div class="container container--feature">
+    <div class="about__grid">
+      <div class="about__lead reveal" data-reveal="fade">
+        <p class="eyebrow">Why me</p>
+        <h2 class="about__headline">
+          You&rsquo;ll be working with one person. Me.
+        </h2>
+      </div>
+
+      <div class="about__body reveal" data-delay="1">
+        <p class="about__p">
+          I&rsquo;m Josiah. Slate is just me &mdash; no account managers, no
+          offshore team, no template farm churning out the same five layouts. When
+          you email, I answer. When something needs changing, I change it.
+        </p>
+        <p class="about__p">
+          I started Slate because most small businesses get one of two bad deals:
+          a $40-a-month builder that leaves them looking like everyone else, or a
+          big agency that quotes five figures and disappears after launch. There
+          is a better middle: a real custom site, built well, by someone you can
+          actually reach.
+        </p>
+        <p class="about__p">
+          I care about the boring things that make a site good &mdash; speed, the
+          way it reads on a cracked phone screen, whether a customer can find your
+          number in two seconds. Those are the things that quietly win you the job.
+        </p>
+
+        <figure class="about__signature">
+          <blockquote>
+            If your site isn&rsquo;t the best thing about your business, it should
+            at least never be the worst.
+          </blockquote>
+          <figcaption>&mdash; Josiah, Slate</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about__grid {
+    display: grid;
+    gap: clamp(2rem, 1rem + 4vw, 4rem);
+  }
+
+  @media (min-width: 1024px) {
+    .about__grid {
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: clamp(3rem, 1rem + 4vw, 6rem);
+      align-items: start;
+    }
+  }
+
+  .about__lead {
+    max-width: 22ch;
+  }
+
+  @media (min-width: 1024px) {
+    .about__lead {
+      position: sticky;
+      top: clamp(6rem, 12vh, 8rem);
+      max-width: none;
+    }
+  }
+
+  .about__headline {
+    margin-top: var(--space-16);
+  }
+
+  .about__p {
+    font-size: var(--fs-body-l);
+    color: var(--ink-2);
+    max-width: var(--measure);
+  }
+
+  .about__p + .about__p {
+    margin-top: var(--space-24);
+  }
+
+  .about__signature {
+    margin: var(--space-48) 0 0;
+    padding: var(--space-32);
+    border-left: 2px solid var(--accent);
+    background: var(--paper-2);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+
+  .about__signature blockquote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.375rem, 1.2rem + 0.9vw, 1.75rem);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    max-width: 30ch;
+  }
+
+  .about__signature figcaption {
+    margin-top: var(--space-16);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--ink-3);
+  }
+</style>

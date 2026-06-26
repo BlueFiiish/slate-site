@@ -1,0 +1,294 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+export interface Props {
+  before: ImageMetadata;
+  after: ImageMetadata;
+  beforeAlt: string;
+  afterAlt: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+}
+
+const {
+  before,
+  after,
+  beforeAlt,
+  afterAlt,
+  beforeLabel = "Before",
+  afterLabel = "After",
+} = Astro.props;
+---
+
+<div class="compare" data-compare>
+  <!-- AFTER is the base layer (full). BEFORE is clipped on top by the handle. -->
+  <div class="compare__pane compare__pane--after">
+    <Image
+      src={after}
+      alt={afterAlt}
+      widths={[640, 960, 1280]}
+      sizes="(min-width: 1024px) 760px, 92vw"
+      loading="lazy"
+      format="avif"
+    />
+    <span class="compare__tag compare__tag--after">{afterLabel}</span>
+  </div>
+
+  <div class="compare__pane compare__pane--before" data-before>
+    <Image
+      src={before}
+      alt={beforeAlt}
+      widths={[640, 960, 1280]}
+      sizes="(min-width: 1024px) 760px, 92vw"
+      loading="lazy"
+      format="avif"
+    />
+    <span class="compare__tag compare__tag--before">{beforeLabel}</span>
+  </div>
+
+  <!-- The control. A real range input = keyboard + AT support for free.
+       The visual handle is decorative and follows the input value. -->
+  <div class="compare__handle" data-handle aria-hidden="true">
+    <span class="compare__line"></span>
+    <span class="compare__grip">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M7 6 3 10l4 4M13 6l4 4-4 4"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </span>
+  </div>
+
+  <input
+    class="compare__range"
+    type="range"
+    min="0"
+    max="100"
+    value="50"
+    step="1"
+    aria-label="Reveal more of the redesigned site, or more of the original"
+    data-range
+  />
+</div>
+
+<style>
+  .compare {
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--paper-2);
+    box-shadow: var(--shadow-3);
+    /* Reserve space to prevent CLS; both images share this ratio. */
+    aspect-ratio: 16 / 10;
+    isolation: isolate;
+  }
+
+  .compare__pane {
+    position: absolute;
+    inset: 0;
+  }
+
+  .compare__pane :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* BEFORE pane is clipped from the left edge to the handle position. */
+  .compare__pane--before {
+    /* --pos is the reveal %, set by JS. Default 50%. With no JS this stays at
+       50% so both halves are visible (graceful, readable fallback). */
+    clip-path: inset(0 calc(100% - var(--pos, 50%)) 0 0);
+  }
+
+  .compare__tag {
+    position: absolute;
+    top: var(--space-16);
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    padding: 6px var(--space-12);
+    border-radius: var(--radius-pill);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .compare__tag--before {
+    left: var(--space-16);
+    background: color-mix(in srgb, var(--ink) 78%, transparent);
+    color: var(--paper);
+  }
+
+  .compare__tag--after {
+    right: var(--space-16);
+    background: color-mix(in srgb, var(--accent) 90%, transparent);
+    color: var(--accent-on);
+  }
+
+  .compare__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--pos, 50%);
+    transform: translateX(-50%);
+    width: 44px;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .compare__line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--paper);
+    box-shadow: 0 0 0 1px hsl(28 30% 12% / 0.18);
+  }
+
+  .compare__grip {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: var(--shadow-2);
+  }
+
+  /* The range input sits on top, invisible, and drives everything.
+     It is full-bleed so the whole image is draggable. */
+  .compare__range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    z-index: 4;
+  }
+
+  .compare__range:focus-visible {
+    outline: none;
+  }
+
+  /* Move the focus ring to the visible grip when the input is focused. */
+  .compare__range:focus-visible ~ .compare__handle .compare__grip {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* ---- No-JS / scroll-wipe fallback ----
+     When JS never runs, --pos stays 50% and both halves are visible with the
+     handle centered, which already communicates the idea. As a small bonus,
+     where scroll-driven animation is supported we let the reveal sweep as the
+     element crosses the viewport, so even without the island there is motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .compare:not([data-ready]) .compare__pane--before,
+      .compare:not([data-ready]) .compare__handle {
+        animation: compare-wipe linear both;
+        animation-timeline: view();
+        animation-range: entry 30% cover 60%;
+      }
+      @keyframes compare-wipe {
+        from {
+          --pos: 78%;
+        }
+        to {
+          --pos: 30%;
+        }
+      }
+    }
+  }
+
+  /* Register --pos so it can be animated/transitioned smoothly. */
+  @property --pos {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 50%;
+  }
+</style>
+
+<script>
+  // The ONE interactive island. Initializes only when the slider scrolls into
+  // view (cheap, deferred). Supports pointer drag, click-to-position, keyboard
+  // (the native range input), and touch. Degrades to the CSS fallback if this
+  // never runs.
+  function initCompare(root: HTMLElement) {
+    const range = root.querySelector<HTMLInputElement>("[data-range]");
+    if (!range) return;
+
+    const apply = (v: number) => {
+      const clamped = Math.max(0, Math.min(100, v));
+      root.style.setProperty("--pos", clamped + "%");
+    };
+
+    // Take over from the CSS fallback.
+    root.setAttribute("data-ready", "");
+    apply(Number(range.value));
+
+    range.addEventListener("input", () => apply(Number(range.value)));
+
+    // Make a tap/drag anywhere set the position immediately (range input only
+    // jumps by step on click in some browsers; this feels like a real slider).
+    const setFromClientX = (clientX: number) => {
+      const rect = root.getBoundingClientRect();
+      const pct = ((clientX - rect.left) / rect.width) * 100;
+      range.value = String(Math.round(Math.max(0, Math.min(100, pct))));
+      apply(Number(range.value));
+    };
+
+    let dragging = false;
+    root.addEventListener("pointerdown", (e) => {
+      dragging = true;
+      setFromClientX(e.clientX);
+    });
+    window.addEventListener("pointermove", (e) => {
+      if (dragging) setFromClientX(e.clientX);
+    });
+    window.addEventListener("pointerup", () => {
+      dragging = false;
+    });
+  }
+
+  function boot() {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-compare]")
+    );
+    if (!nodes.length) return;
+
+    if (!("IntersectionObserver" in window)) {
+      nodes.forEach(initCompare);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            initCompare(entry.target as HTMLElement);
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: "200px 0px" }
+    );
+    nodes.forEach((n) => io.observe(n));
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+</script>

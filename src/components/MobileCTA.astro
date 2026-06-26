@@ -1,0 +1,60 @@
+---
+// Sticky mobile CTA bar. Appears past the hero, mobile only. Reveal driven by
+// scroll-timeline where supported; otherwise it is simply always visible on
+// small screens past the fold (a fine fallback). It hides itself near the
+// footer contact section is not needed — anchor still works.
+---
+
+<div class="mcta" aria-hidden="false">
+  <a class="btn btn--primary mcta__btn" href="#contact">Get my free redesign</a>
+</div>
+
+<style>
+  .mcta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    padding: var(--space-12) var(--gutter)
+      calc(var(--space-12) + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-top: 1px solid var(--hairline);
+    /* Hidden by default; shown past the hero. */
+    transform: translateY(120%);
+    transition: transform var(--dur-reveal) var(--ease-out);
+  }
+
+  .mcta__btn {
+    width: 100%;
+  }
+
+  /* Show only on small screens, and only past the hero. */
+  @media (min-width: 768px) {
+    .mcta {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    @supports (animation-timeline: scroll()) {
+      .mcta {
+        animation: mcta-show steps(1) both;
+        animation-timeline: scroll(root);
+        /* Reveal after ~85vh of scroll (past the hero). */
+        animation-range: 85vh 85vh;
+      }
+      @keyframes mcta-show {
+        to {
+          transform: translateY(0);
+        }
+      }
+    }
+    /* Fallback (no scroll-timeline): just keep it visible. */
+    :global(html.no-scroll-timeline) .mcta {
+      transform: translateY(0);
+    }
+  }
+</style>

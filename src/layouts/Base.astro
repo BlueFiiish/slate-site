@@ -1,0 +1,178 @@
+---
+import "../styles/global.css";
+// Import the two above-the-fold latin faces as URL assets so the preload href
+// matches the exact hashed file the bundled @font-face actually fetches
+// (these resolve to /<base>/_astro/<hash>.woff2 — and respect the base path).
+import frauncesLatin from "@fontsource-variable/fraunces/files/fraunces-latin-standard-normal.woff2?url";
+import interTightLatin from "@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  /** Path to the OG image relative to site root, e.g. /og.png */
+  ogImage?: string;
+}
+
+const {
+  title = "Slate — Websites that make a small business look like the real deal",
+  description = "Slate is an independent, owner-operated web studio. I design, build, and maintain fast, honest websites for small businesses. Start with a free redesign of a page of your site.",
+  ogImage = "og-cover.png",
+} = Astro.props;
+
+// BASE_URL is "/" with a custom domain, or "/slate-site/" on GitHub Pages.
+// Prefix root-relative assets with it so they resolve under the deploy path.
+const base = import.meta.env.BASE_URL;
+const withBase = (p: string) => `${base}${p.replace(/^\//, "")}`;
+
+const fallbackOrigin = "https://slateandco.com";
+const site = Astro.site?.toString().replace(/\/$/, "") ?? fallbackOrigin;
+// Astro.url.pathname already includes the base path, so canonical is correct.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? fallbackOrigin).toString();
+const ogUrl = new URL(withBase(ogImage), Astro.site ?? fallbackOrigin).toString();
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfessionalService",
+      "@id": `${site}/#studio`,
+      name: "Slate",
+      description:
+        "Independent, owner-operated web studio. Website design, build, and care for small businesses.",
+      url: site,
+      email: "hello@slateandco.com",
+      priceRange: "$$",
+      areaServed: "United States",
+      knowsAbout: [
+        "Web design",
+        "Web development",
+        "Astro",
+        "Website performance",
+        "Web accessibility",
+        "Local SEO",
+      ],
+      makesOffer: [
+        {
+          "@type": "Offer",
+          name: "Website build",
+          description:
+            "A full custom website rebuild, designed, built, and launched.",
+        },
+        {
+          "@type": "Offer",
+          name: "Care + marketing plan",
+          description:
+            "Monthly hosting, updates, edits, and marketing basics.",
+        },
+        {
+          "@type": "Offer",
+          name: "Free page redesign",
+          description:
+            "A free before/after redesign of one page of your current website.",
+        },
+      ],
+      founder: { "@id": `${site}/#owner` },
+      provider: { "@id": `${site}/#owner` },
+    },
+    {
+      "@type": "Person",
+      "@id": `${site}/#owner`,
+      name: "Josiah Meyen",
+      jobTitle: "Web designer and developer",
+      worksFor: { "@id": `${site}/#studio` },
+      url: site,
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#fbfbf8" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:site_name" content="Slate" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+
+    <!-- Preload the two above-the-fold latin faces (hashed bundle URLs that
+         match the @font-face src exactly, so the fetch is reused not wasted). -->
+    <link
+      rel="preload"
+      href={frauncesLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={interTightLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a18'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' fill='%23fbfbf8' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
+    />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(jsonLd)}
+    />
+
+    <!-- Feature-detect scroll-driven animation: flag the fallback path early
+         so there is no flash. No-op if JS is disabled (content visible). -->
+    <script is:inline>
+      if (!CSS.supports("animation-timeline: view()")) {
+        document.documentElement.classList.add("no-scroll-timeline");
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+
+    <!-- ~1KB IntersectionObserver fallback. Runs ONLY when native scroll-driven
+         animation is unsupported and motion is allowed. Content is already
+         visible by default, so this only adds the reveal transition. -->
+    <script is:inline>
+      (function () {
+        var html = document.documentElement;
+        if (!html.classList.contains("no-scroll-timeline")) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        if (!("IntersectionObserver" in window)) return;
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (e) {
+              if (e.isIntersecting) {
+                e.target.classList.add("is-in");
+                io.unobserve(e.target);
+              }
+            });
+          },
+          { rootMargin: "0px 0px -12% 0px", threshold: 0.05 }
+        );
+        document.querySelectorAll(".reveal").forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+    </script>
+  </body>
+</html>

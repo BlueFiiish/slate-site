@@ -1,0 +1,207 @@
+---
+const buildIncludes = [
+  "A custom site designed around your business, not a template",
+  "Built in Astro: fast, accessible, mobile-first",
+  "Your real photos, copy, and content (I help shape it)",
+  "Online ordering, booking, or contact wired to work",
+  "Launched on your domain, with the files handed to you",
+];
+
+const careIncludes = [
+  "Hosting, backups, and security handled",
+  "Edits and updates whenever you need them",
+  "Google Business Profile and local SEO basics",
+  "A check-in so the site never goes stale",
+  "Cancel anytime, no long contract",
+];
+---
+
+<section class="pricing section" id="pricing">
+  <div class="container container--feature">
+    <header class="pricing__head reveal" data-reveal="fade">
+      <p class="eyebrow">Honest pricing</p>
+      <h2 class="pricing__headline">Two ways to work, plainly priced.</h2>
+      <p class="lead measure pricing__sub">
+        No tiers, no &ldquo;contact sales,&rdquo; no surprise upsell. These are
+        starting ranges &mdash; the real number depends on your site, and
+        you&rsquo;ll know it before anything starts.
+      </p>
+    </header>
+
+    <div class="pricing__grid">
+      <article class="plan reveal" data-delay="1">
+        <p class="eyebrow eyebrow--muted">The build</p>
+        <p class="plan__price">
+          <span class="plan__from">Starting around</span>
+          <span class="plan__num">$2,500</span>
+          <span class="plan__unit">one time</span>
+        </p>
+        <p class="plan__lede">
+          A complete custom website, designed, built, and launched. Yours to keep.
+        </p>
+        <ul class="plan__list">
+          {
+            buildIncludes.map((item) => (
+              <li>
+                <svg class="plan__check" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <path d="m4 9 3.2 3.2L14 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <article class="plan plan--featured reveal" data-delay="2">
+        <p class="eyebrow plan__tag">Most popular</p>
+        <p class="eyebrow eyebrow--muted">Care + marketing</p>
+        <p class="plan__price">
+          <span class="plan__from">Starting around</span>
+          <span class="plan__num">$299<span class="plan__per">/mo</span></span>
+          <span class="plan__unit">cancel anytime</span>
+        </p>
+        <p class="plan__lede">
+          I keep your site fast, current, and working to bring in customers &mdash;
+          month after month.
+        </p>
+        <ul class="plan__list">
+          {
+            careIncludes.map((item) => (
+              <li>
+                <svg class="plan__check" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <path d="m4 9 3.2 3.2L14 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+    </div>
+
+    <p class="pricing__footer reveal" data-reveal="fade">
+      Not sure yet? <a class="text-link" href="#contact">Start with the free
+      redesign.</a> No cost, no commitment &mdash; just see what your site could
+      look like.
+    </p>
+  </div>
+</section>
+
+<style>
+  .pricing__head {
+    max-width: 50ch;
+  }
+
+  .pricing__headline {
+    margin-top: var(--space-16);
+  }
+
+  .pricing__sub {
+    margin-top: var(--space-24);
+  }
+
+  .pricing__grid {
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    display: grid;
+    gap: var(--space-24);
+  }
+
+  @media (min-width: 768px) {
+    .pricing__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-32);
+    }
+  }
+
+  .plan {
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+    background: var(--paper);
+  }
+
+  .plan--featured {
+    position: relative;
+    background: var(--paper-2);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--hairline));
+  }
+
+  .plan__tag {
+    position: absolute;
+    top: calc(-1 * var(--space-12));
+    right: var(--space-24);
+    background: var(--accent);
+    color: var(--accent-on);
+    padding: 6px var(--space-12);
+    border-radius: var(--radius-pill);
+  }
+
+  .plan__price {
+    margin-top: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .plan__from {
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+  }
+
+  .plan__num {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 2rem + 2.4vw, 3.5rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .plan__per {
+    font-size: 0.45em;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: -0.01em;
+  }
+
+  .plan__unit {
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+  }
+
+  .plan__lede {
+    margin-top: var(--space-24);
+    color: var(--ink-2);
+    max-width: 40ch;
+  }
+
+  .plan__list {
+    margin-top: var(--space-24);
+    display: grid;
+    gap: var(--space-16);
+    padding-top: var(--space-24);
+    border-top: 1px solid var(--hairline);
+  }
+
+  .plan__list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-12);
+    align-items: start;
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+  }
+
+  .plan__check {
+    color: var(--accent);
+    margin-top: 2px;
+  }
+
+  .pricing__footer {
+    margin-top: clamp(2rem, 1.5rem + 3vw, 3rem);
+    font-size: var(--fs-body-l);
+    color: var(--ink-2);
+    max-width: 56ch;
+  }
+</style>
