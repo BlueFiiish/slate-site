@@ -24,7 +24,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Build with Astro
         uses: withastro/action@v3
-        # Defaults: package manager auto-detected, build = `astro build`,
+        with:
+          # Astro 6 requires Node >=22.12; the action defaults to 20.
+          node-version: 22
+        # Package manager auto-detected, build = `astro build`,
         # uploads ./dist as the Pages artifact. site/base come from astro.config.
 
   deploy:
