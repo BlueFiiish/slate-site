@@ -1,0 +1,841 @@
+---
+/*
+  LaptopShowcase — a scroll-scrubbed CINEMATIC TRAILER playing INSIDE the
+  laptop screen. As the user scrolls, the pinned laptop advances through a
+  ~8-beat motion graphic: it opens on the real Ana rebuild, then the imagery
+  slides/scales aside to make room for designed typographic "service" slides,
+  crossfading between real screenshots (desktop sections + the mobile view) and
+  clean designed visuals, and ends on the studio wordmark.
+
+  HOW IT SHIPS (per the studio's elite-toolchain + motion rules):
+  - Performance-budgeted island. GSAP + ScrollTrigger is loaded LAZILY via a
+    dynamic import gated behind an IntersectionObserver (island-on-visible), so
+    the GSAP bundle is fetched only when the section nears the viewport and
+    NEVER blocks the hero/LCP. Upfront JS is tiny (the observer shim only).
+  - The whole trailer is DOM + CSS + GSAP — NO mp4/webm in the screen. Text is
+    real, sharp, selectable, and translatable; transitions animate
+    transform/opacity ONLY (compositor-friendly).
+  - Static fallback: with JS off (or before hydration) the section renders
+    complete and legible — the laptop shows the hero rebuild and ALL SIX
+    services appear as a readable grid below it. Nothing is hidden behind the
+    animation.
+  - prefers-reduced-motion: the script bails before building; CSS shows the
+    settled end-state (closing frame + the six services listed), no scrub.
+  - Route-leave cleanup: the gsap.context (timeline + ScrollTrigger) is reverted
+    on astro:before-swap AND pagehide so View-Transition navigation can't leak.
+  - Budget: section height is reserved (pin host padding) so pinning adds zero
+    CLS. Images are dimension-locked via astro:assets (AVIF).
+*/
+import { Image } from "astro:assets";
+import anaDesktop from "../assets/captures/ana-desktop-top.png";
+import anaGallery from "../assets/captures/ana-desktop-gallery.png";
+import anaLower from "../assets/captures/ana-desktop-lower.png";
+import anaGallery2 from "../assets/captures/ana-mobile-gallery.png";
+import anaMobile from "../assets/captures/ana-mobile-top.png";
+
+// The six services, in trailer order. `kind` controls the on-screen treatment:
+//  - "wide"  : paired with a full-bleed desktop screenshot, panel on one side
+//  - "phone" : paired with the mobile frame, shown phone-shaped
+const services = [
+  {
+    n: "01",
+    title: "Custom-designed",
+    body: "Drawn for your business from scratch — never a template.",
+  },
+  {
+    n: "02",
+    title: "Built in Astro",
+    body: "Clean code that loads in about a second on a phone.",
+  },
+  {
+    n: "03",
+    title: "Right on every phone",
+    body: "Designed mobile-first, so it looks sharp on any screen.",
+  },
+  {
+    n: "04",
+    title: "Your Google listing, handled",
+    body: "Your map and search presence set up and looked after.",
+  },
+  {
+    n: "05",
+    title: "Real before & afters",
+    body: "Honest rebuilds of live sites — not staged mockups.",
+  },
+  {
+    n: "06",
+    title: "One person",
+    body: "You reach the maker, start to finish. No hand-offs.",
+  },
+];
+---
+
+<section class="showcase" id="showcase" aria-labelledby="showcase-heading">
+  <div class="showcase__pin" data-showcase-pin>
+    <div class="showcase__inner container container--feature">
+      <header class="showcase__head" data-showcase-head>
+        <p class="eyebrow">Anatomy of a Slate site</p>
+        <h2 id="showcase-heading" class="showcase__headline">
+          A closer look at what you actually get.
+        </h2>
+        <p class="showcase__scrollhint" data-showcase-hint aria-hidden="true">
+          Scroll to play
+        </p>
+      </header>
+
+      <!-- THE DEVICE: pinned, zooming, tilting. The trailer plays in .screen. -->
+      <div class="showcase__device" data-showcase-device>
+        <div class="showcase__glow" aria-hidden="true"></div>
+        <figure class="laptop">
+          <div class="laptop__bezel">
+            <span class="laptop__cam" aria-hidden="true"></span>
+            <div class="laptop__screen" data-screen>
+              <!-- ===== STAGE A: real screenshots that crossfade/scale ===== -->
+              <div class="frame" data-frame="hero" data-active>
+                <Image
+                  class="frame__img"
+                  src={anaDesktop}
+                  alt="The Ana's Confections homepage Slate rebuilt, shown full-screen."
+                  width={1280}
+                  sizes="(min-width: 1024px) 760px, 92vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+              <div class="frame" data-frame="custom" aria-hidden="true">
+                <Image
+                  class="frame__img"
+                  src={anaDesktop}
+                  alt=""
+                  width={1280}
+                  sizes="(min-width: 1024px) 760px, 92vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+              <div class="frame" data-frame="astro" aria-hidden="true">
+                <Image
+                  class="frame__img"
+                  src={anaGallery}
+                  alt="A section of Ana's rebuilt site showing the cake gallery grid."
+                  width={1280}
+                  sizes="(min-width: 1024px) 760px, 92vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+              <div class="frame frame--phone" data-frame="phone" aria-hidden="true">
+                <Image
+                  class="frame__img frame__img--phone"
+                  src={anaMobile}
+                  alt="The same Ana's Confections site shown on a phone."
+                  width={760}
+                  sizes="(min-width: 1024px) 300px, 60vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+              <div class="frame" data-frame="google" aria-hidden="true">
+                <Image
+                  class="frame__img"
+                  src={anaLower}
+                  alt="A lower section of Ana's rebuilt site with featured cakes and a gallery link."
+                  width={1280}
+                  sizes="(min-width: 1024px) 760px, 92vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+              <div class="frame frame--phone" data-frame="real" aria-hidden="true">
+                <Image
+                  class="frame__img frame__img--phone"
+                  src={anaGallery2}
+                  alt="The mobile gallery of Ana's rebuilt site, full of real cakes."
+                  width={760}
+                  sizes="(min-width: 1024px) 300px, 60vw"
+                  format="avif"
+                  loading="lazy"
+                />
+              </div>
+
+              <!-- ===== STAGE B: the tint panel + typographic service slides ===== -->
+              <!-- A terracotta-tinted panel that slides in to host the text. -->
+              <div class="panel" data-panel aria-hidden="true"></div>
+
+              <div class="slides" data-slides aria-hidden="true">
+                {
+                  services.map((s) => {
+                    // Beats 03 / 05 / 06 pair with a phone frame on the RIGHT,
+                    // so their panel + text sit on the LEFT.
+                    const left = s.n === "03" || s.n === "05" || s.n === "06";
+                    return (
+                      <div
+                        class:list={["slide", { "slide--left": left }]}
+                        data-slide={s.n}
+                      >
+                        <span class="slide__num">{s.n}</span>
+                        <p class="slide__title">{s.title}</p>
+                        <p class="slide__body">{s.body}</p>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+
+              <!-- ===== CLOSING FRAME: the studio wordmark (also the no-JS
+                   settled end-state shown inside the screen). ===== -->
+              <div class="closing" data-closing aria-hidden="true">
+                <span class="closing__eyebrow">Slate &amp; Co.</span>
+                <p class="closing__line">See the real before &amp; afters.</p>
+              </div>
+
+              <!-- Subtle film grade so screenshots feel composed, not pasted. -->
+              <span class="screen__vignette" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="laptop__base" aria-hidden="true">
+            <span class="laptop__hinge"></span>
+          </div>
+        </figure>
+        <p class="showcase__caption">
+          A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
+        </p>
+      </div>
+
+      <!-- ===== STATIC / NO-JS / a11y service list. Always in the DOM so the
+           six services are legible without the trailer. The live island hides
+           this (it's redundant once the screen plays the slides). ===== -->
+      <ul class="showcase__list" data-showcase-list>
+        {
+          services.map((s) => (
+            <li class="svc">
+              <span class="svc__num">{s.n}</span>
+              <div>
+                <p class="svc__title">{s.title}</p>
+                <p class="svc__body">{s.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ----------------------------------------------------------------------
+  // Island-on-visible: load GSAP + wire the scrubbed trailer only when the
+  // section nears the viewport, and only when motion is allowed. Everything
+  // is progressive enhancement over the complete static markup above.
+  // ----------------------------------------------------------------------
+  type STModule = typeof import("gsap/ScrollTrigger");
+
+  const section = document.querySelector<HTMLElement>("#showcase");
+  if (section) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let built = false;
+    let teardown: (() => void) | null = null;
+
+    async function build() {
+      if (built) return;
+      built = true;
+
+      const { gsap } = await import("gsap");
+      const mod: STModule = await import("gsap/ScrollTrigger");
+      const ScrollTrigger = mod.ScrollTrigger;
+      gsap.registerPlugin(ScrollTrigger);
+
+      const pin = section!.querySelector<HTMLElement>("[data-showcase-pin]");
+      const device = section!.querySelector<HTMLElement>(
+        "[data-showcase-device]"
+      );
+      const hint = section!.querySelector<HTMLElement>("[data-showcase-hint]");
+      const panel = section!.querySelector<HTMLElement>("[data-panel]");
+      const closing = section!.querySelector<HTMLElement>("[data-closing]");
+      if (!pin || !device || !panel) return;
+
+      const frame = (name: string) =>
+        section!.querySelector<HTMLElement>(`[data-frame="${name}"]`);
+      const slide = (n: string) =>
+        section!.querySelector<HTMLElement>(`[data-slide="${n}"]`);
+
+      const f = {
+        hero: frame("hero"),
+        custom: frame("custom"),
+        astro: frame("astro"),
+        phone: frame("phone"),
+        google: frame("google"),
+        real: frame("real"),
+      };
+      const s = {
+        s1: slide("01"),
+        s2: slide("02"),
+        s3: slide("03"),
+        s4: slide("04"),
+        s5: slide("05"),
+        s6: slide("06"),
+      };
+
+      // Hand control to GSAP: CSS static end-state styles step aside.
+      section!.classList.add("is-live");
+
+      const ctx = gsap.context(() => {
+        // ----- explicit start-state (transform/opacity only) -----
+        // PUSHED 3D tilt: more pronounced than the prior subtle version.
+        gsap.set(device, { scale: 0.8, rotateX: 11, rotateY: -15, y: 10 });
+
+        // All frames hidden except the opening hero.
+        const allFrames = Object.values(f).filter(Boolean) as HTMLElement[];
+        gsap.set(allFrames, { autoAlpha: 0, scale: 1.06 });
+        gsap.set(f.hero!, { autoAlpha: 1, scale: 1, xPercent: 0 });
+
+        // Panel + every slide + closing start hidden.
+        gsap.set(panel, { autoAlpha: 0, xPercent: 8 });
+        const allSlides = Object.values(s).filter(Boolean) as HTMLElement[];
+        gsap.set(allSlides, { autoAlpha: 0, y: 18 });
+        if (closing) gsap.set(closing, { autoAlpha: 0, scale: 1.04 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: pin,
+            start: "top top",
+            // Generous pin so ~8 beats breathe (Apple-style pacing).
+            end: "+=360%",
+            scrub: 0.7,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        // Helper: cinematic ease for discrete beat transitions inside the
+        // otherwise-linear scrub (keeps each beat readable, not mushy).
+        const E = "power2.inOut";
+
+        // ============================================================
+        // BEAT 0 (0.00 -> 0.10): OPEN. Laptop zooms in + tilt settles
+        // most of the way. Hero rebuild on screen, no text. Hint fades.
+        // ============================================================
+        tl.to(device, { scale: 1, rotateX: 4, rotateY: -7, y: 0, ease: E, duration: 0.1 }, 0);
+        if (hint) tl.to(hint, { autoAlpha: 0, duration: 0.04 }, 0.02);
+
+        // ============================================================
+        // BEAT 1 (0.12 -> 0.24): SERVICE 01 "Custom-designed".
+        // Hero photo scales + slides LEFT to make room; panel slides in
+        // from the right; slide 1 types/fades over it. Tilt fully flat.
+        // ============================================================
+        tl.to(device, { rotateX: 0, rotateY: 0, ease: E, duration: 0.08 }, 0.12);
+        tl.to(f.hero!, { xPercent: -20, scale: 0.9, ease: E, duration: 0.1 }, 0.12);
+        tl.to(panel, { autoAlpha: 1, xPercent: 0, ease: E, duration: 0.08 }, 0.14);
+        tl.to(s.s1!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.17);
+
+        // ============================================================
+        // BEAT 2 (0.28 -> 0.40): SERVICE 02 "Built in Astro".
+        // Crossfade hero->gallery (a different real shot), swap slide.
+        // ============================================================
+        tl.to(s.s1!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.28);
+        tl.to(f.hero!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.29);
+        tl.fromTo(
+          f.astro!,
+          { autoAlpha: 0, scale: 1.06, xPercent: 0 },
+          { autoAlpha: 1, scale: 0.9, xPercent: -20, ease: E, duration: 0.08 },
+          0.29
+        );
+        tl.to(s.s2!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.34);
+
+        // ============================================================
+        // BEAT 3 (0.44 -> 0.58): SERVICE 03 "Right on every phone".
+        // Mask-feel swap to the PHONE frame; panel flips to the LEFT,
+        // phone sits RIGHT. Slide 3 enters.
+        // ============================================================
+        tl.to(s.s2!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.44);
+        tl.to(f.astro!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.45);
+        tl.to(panel, { xPercent: -100 + 8, ease: E, duration: 0.07 }, 0.45); // panel to left side
+        tl.fromTo(
+          f.phone!,
+          { autoAlpha: 0, scale: 0.7, xPercent: 26, yPercent: 6 },
+          { autoAlpha: 1, scale: 0.82, xPercent: 26, yPercent: 0, ease: E, duration: 0.09 },
+          0.46
+        );
+        tl.to(s.s3!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.51);
+
+        // ============================================================
+        // BEAT 4 (0.62 -> 0.74): SERVICE 04 "Your Google listing, handled".
+        // Phone exits, panel returns to RIGHT, lower-section shot enters.
+        // ============================================================
+        tl.to(s.s3!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.62);
+        tl.to(f.phone!, { autoAlpha: 0, scale: 0.7, ease: E, duration: 0.06 }, 0.62);
+        tl.to(panel, { xPercent: 0, ease: E, duration: 0.07 }, 0.63); // panel back to right
+        tl.fromTo(
+          f.google!,
+          { autoAlpha: 0, scale: 1.06, xPercent: 0 },
+          { autoAlpha: 1, scale: 0.9, xPercent: -20, ease: E, duration: 0.08 },
+          0.63
+        );
+        tl.to(s.s4!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.68);
+
+        // ============================================================
+        // BEAT 5 (0.78 -> 0.86): SERVICE 05 "Real before & afters".
+        // Crossfade to the mobile gallery (phone), panel to LEFT again.
+        // ============================================================
+        tl.to(s.s4!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.78);
+        tl.to(f.google!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.78);
+        tl.to(panel, { xPercent: -100 + 8, ease: E, duration: 0.06 }, 0.79);
+        tl.fromTo(
+          f.real!,
+          { autoAlpha: 0, scale: 0.72, xPercent: 26 },
+          { autoAlpha: 1, scale: 0.82, xPercent: 26, ease: E, duration: 0.08 },
+          0.79
+        );
+        tl.to(s.s5!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.06 }, 0.83);
+
+        // ============================================================
+        // BEAT 6 (0.88 -> 0.93): SERVICE 06 "One person".
+        // Same real frame holds; slide 5 swaps to slide 6 (panel centers).
+        // ============================================================
+        tl.to(s.s5!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.04 }, 0.88);
+        tl.to(s.s6!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.06 }, 0.9);
+
+        // ============================================================
+        // BEAT 7 (0.94 -> 1.00): CLOSING. Everything settles to the
+        // studio wordmark frame. Tiny push-in for a confident button.
+        // ============================================================
+        tl.to([f.real!, panel, s.s6!], { autoAlpha: 0, ease: E, duration: 0.05 }, 0.94);
+        if (closing)
+          tl.to(closing, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.95);
+        tl.to(device, { scale: 1.02, ease: "power1.out", duration: 0.05 }, 0.95);
+      }, section!);
+
+      teardown = () => {
+        ctx.revert(); // kills timeline + ScrollTrigger, restores inline styles
+        section!.classList.remove("is-live");
+        built = false;
+        teardown = null;
+      };
+    }
+
+    function maybeBuild() {
+      if (reduce.matches) return; // settled end-state via CSS; no JS motion
+      build();
+    }
+
+    // Load slightly before the section scrolls into view.
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              io.disconnect();
+              maybeBuild();
+            }
+          }
+        },
+        { rootMargin: "500px 0px 500px 0px" }
+      );
+      io.observe(section);
+    } else {
+      maybeBuild();
+    }
+
+    // If reduced-motion flips on while built, tear down to settled state.
+    reduce.addEventListener("change", () => {
+      if (reduce.matches && teardown) teardown();
+    });
+
+    // ---- Route-leave cleanup (View Transitions + bfcache) ----
+    const cleanup = () => {
+      if (teardown) teardown();
+    };
+    document.addEventListener("astro:before-swap", cleanup, { once: true });
+    window.addEventListener("pagehide", cleanup, { once: true });
+  }
+</script>
+
+<style>
+  /* =====================================================================
+     STATIC / FALLBACK (default, no-JS, settled). The laptop shows the
+     CLOSING wordmark frame and the six services render in a legible grid
+     below it. Nothing is hidden behind the animation.
+     ===================================================================== */
+  .showcase {
+    position: relative;
+    background: var(--paper-2);
+    border-block: 1px solid var(--hairline);
+    overflow: clip;
+  }
+
+  .showcase__pin {
+    /* Reserve height so pinning adds ZERO CLS. */
+    padding-block: var(--section-y);
+  }
+
+  .showcase__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .showcase__head {
+    max-width: 40ch;
+    text-align: center;
+  }
+
+  .showcase__headline {
+    margin-top: var(--space-16);
+    font-size: var(--fs-h2);
+    letter-spacing: var(--tracking-h2);
+  }
+
+  .showcase__scrollhint {
+    margin-top: var(--space-16);
+    font-family: var(--font-body);
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    /* Only meaningful once the trailer can play. Hidden when not live. */
+    opacity: 0;
+  }
+
+  /* ---- Device ---- */
+  .showcase__device {
+    position: relative;
+    isolation: isolate;
+    width: min(100%, 860px);
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    perspective: 1600px; /* parent owns perspective so child rotate reads 3D */
+    will-change: transform;
+  }
+
+  .showcase__glow {
+    position: absolute;
+    inset: -16% -10% -22%;
+    z-index: -1;
+    background: radial-gradient(
+        58% 52% at 64% 30%,
+        var(--accent-tint) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        46% 48% at 28% 80%,
+        color-mix(in srgb, var(--accent-tint) 55%, transparent) 0%,
+        transparent 70%
+      );
+    filter: blur(10px);
+  }
+
+  .laptop {
+    margin: 0;
+    transform-style: preserve-3d;
+  }
+
+  .laptop__bezel {
+    position: relative;
+    border-radius: 20px;
+    padding: 12px;
+    background: linear-gradient(160deg, #2c2c30, #161618);
+    box-shadow: var(--shadow-3);
+  }
+
+  .laptop__cam {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #3a3a40;
+    z-index: 4;
+  }
+
+  .laptop__screen {
+    position: relative;
+    overflow: hidden;
+    border-radius: 9px;
+    background: var(--paper);
+    aspect-ratio: 16 / 10;
+    isolation: isolate;
+  }
+
+  /* ---- Stage A: real-screenshot frames ---- */
+  .frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .frame__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* Phone-shaped frames sit on a soft paper field, centered. */
+  .frame--phone {
+    background: linear-gradient(180deg, var(--paper) 0%, var(--accent-tint) 160%);
+    display: grid;
+    place-items: center;
+  }
+
+  .frame__img--phone {
+    width: auto;
+    height: 92%;
+    aspect-ratio: 390 / 844;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 14px;
+    box-shadow: var(--shadow-2);
+  }
+
+  /* In the static end-state only the CLOSING frame shows. Hide stage-A
+     frames + the panel + slides so the finished screen reads cleanly. */
+  .frame,
+  .panel,
+  .slides {
+    opacity: 0;
+  }
+
+  /* ---- Stage B: tint panel + typographic slides ---- */
+  .panel {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    width: 52%;
+    height: 100%;
+    background: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--accent) 92%, #000 8%) 0%,
+      var(--accent) 60%,
+      var(--accent-hover) 100%
+    );
+  }
+
+  .slides {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+  }
+
+  .slide {
+    position: absolute;
+    /* Default: text lives over the panel on the RIGHT half. The panel
+       moves left for phone beats; the slides stay centered in the right
+       column, which still reads because the panel underlaps them.
+       To keep text legible regardless of panel side, slides are anchored
+       to the right column and use on-accent ink. */
+    top: 50%;
+    right: 6%;
+    width: 42%;
+    transform: translateY(-50%);
+    color: var(--accent-on);
+  }
+
+  /* Phone beats: panel + text on the LEFT, phone on the right. */
+  .slide--left {
+    right: auto;
+    left: 6%;
+  }
+
+  .slide__num {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    font-feature-settings: "tnum";
+    color: color-mix(in srgb, var(--accent-on) 80%, transparent);
+    margin-bottom: var(--space-8);
+  }
+
+  .slide__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 0.9rem + 1.6vw, 2rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-h3);
+  }
+
+  .slide__body {
+    margin-top: var(--space-12);
+    font-size: clamp(0.8125rem, 0.7rem + 0.4vw, 0.9375rem);
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--accent-on) 88%, transparent);
+    max-width: 26ch;
+  }
+
+  /* ---- Closing wordmark frame (= static settled end-state) ---- */
+  .closing {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    gap: var(--space-12);
+    padding: var(--space-32);
+    background: radial-gradient(
+        70% 80% at 50% 30%,
+        var(--accent-tint) 0%,
+        transparent 75%
+      ),
+      var(--paper);
+  }
+
+  .closing__eyebrow {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+    font-weight: 600;
+    letter-spacing: var(--tracking-h2);
+    color: var(--ink);
+  }
+
+  .closing__line {
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    color: var(--ink-2);
+  }
+
+  .screen__vignette {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 40px hsl(28 30% 12% / 0.1);
+    border-radius: 9px;
+  }
+
+  /* ---- Laptop base ---- */
+  .laptop__base {
+    position: relative;
+    height: 15px;
+    margin: 0 -3.4%;
+    border-bottom-left-radius: 11px;
+    border-bottom-right-radius: 11px;
+    background: linear-gradient(180deg, #c9c8c4, #a7a6a1 60%, #87867f);
+  }
+
+  .laptop__hinge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16%;
+    height: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background: #8b8a84;
+  }
+
+  .showcase__caption {
+    margin-top: var(--space-24);
+    font-size: var(--fs-small);
+    color: var(--ink-3);
+    text-align: center;
+  }
+  .showcase__caption strong {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+
+  /* ---- Static / a11y service list (below the laptop) ---- */
+  .showcase__list {
+    width: 100%;
+    max-width: var(--container);
+    margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-24) var(--space-48);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 720px) {
+    .showcase__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .showcase__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .svc {
+    display: flex;
+    gap: var(--space-16);
+    align-items: flex-start;
+  }
+
+  .svc__num {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--accent);
+    font-feature-settings: "tnum";
+    padding-top: 2px;
+    min-width: 2ch;
+  }
+
+  .svc__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-h3);
+    color: var(--ink);
+  }
+
+  .svc__body {
+    margin-top: var(--space-8);
+    font-size: var(--fs-small);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 32ch;
+  }
+
+  /* =====================================================================
+     LIVE STATE: GSAP loaded. It drives transform/opacity inline. The
+     redundant static service list is hidden (the screen now plays the
+     slides), and the closing frame's default opacity is handed to GSAP.
+     ===================================================================== */
+  .showcase.is-live .showcase__list {
+    display: none;
+  }
+  .showcase.is-live .showcase__scrollhint {
+    opacity: 1;
+  }
+  .showcase.is-live .closing {
+    opacity: 0; /* GSAP reveals it on the final beat */
+  }
+  /* The slides CONTAINER is opacity:0 in the static end-state (so the closing
+     frame reads clean). Once live, hand it to GSAP — which controls each child
+     .slide's autoAlpha individually — by restoring the container to full. */
+  .showcase.is-live .slides {
+    opacity: 1;
+  }
+  .showcase.is-live .showcase__device {
+    will-change: transform;
+  }
+
+  /* =====================================================================
+     REDUCED MOTION: settled end-state, no scrub. The JS island bails
+     before building, so static styles already apply; this guarantees the
+     device sits flat and the service list stays visible even if a stray
+     inline style slipped through.
+     ===================================================================== */
+  @media (prefers-reduced-motion: reduce) {
+    .showcase__device {
+      transform: none !important;
+    }
+    .showcase__scrollhint {
+      display: none;
+    }
+  }
+</style>
