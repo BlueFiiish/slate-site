@@ -83,22 +83,28 @@
   }
 
   .about__signature {
+    position: relative;
     margin: var(--space-48) 0 0;
     padding: var(--space-32);
     border-left: 2px solid var(--accent);
-    background: var(--paper-2);
+    background: var(--panel);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    box-shadow: var(--glow-cta);
   }
 
   .about__signature blockquote {
     font-family: var(--font-display);
-    font-style: italic;
     font-weight: 400;
     font-size: clamp(1.375rem, 1.2rem + 0.9vw, 1.75rem);
     line-height: 1.35;
     letter-spacing: -0.01em;
     color: var(--ink);
     max-width: 30ch;
+  }
+
+  .about__signature figcaption {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
   }
 
   .about__signature figcaption {

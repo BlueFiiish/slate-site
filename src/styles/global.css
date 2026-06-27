@@ -6,11 +6,12 @@
 
 /* Self-hosted variable fonts, font-display: swap. The CSS ships every subset
    but the browser only fetches the latin face (unicode-range scoped); the two
-   above-the-fold latin faces are <link rel=preload>ed in Base.astro.
-   Fraunces italic powers the signature note in About. */
-@import "@fontsource-variable/fraunces/standard.css";
-@import "@fontsource-variable/fraunces/standard-italic.css";
+   above-the-fold latin faces (Space Grotesk display + Inter Tight body) are
+   <link rel=preload>ed in Base.astro. JetBrains Mono is the tech-accent voice
+   (eyebrows, metrics, kickers) — loaded but not preloaded (below the fold). */
+@import "@fontsource-variable/space-grotesk/index.css";
 @import "@fontsource-variable/inter-tight/index.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
 
 @import "./tokens.css";
 
@@ -38,7 +39,8 @@ html {
 }
 
 body {
-  background: var(--paper);
+  position: relative;
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--fs-body);
@@ -48,6 +50,60 @@ body {
   text-rendering: optimizeLegibility;
   font-synthesis: none;
   overflow-x: hidden;
+}
+
+/* ---- Cyber backdrop ---------------------------------------------------
+   A single fixed, GPU-free layer behind everything: a faint dot-matrix
+   "blueprint" grid that fades out toward the bottom, plus one cool aurora
+   wash at the top. Static CSS only — no JS, no WebGL, no repaint cost.
+   Pointer-events off; sits at z -1 so all content stacks above it. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      var(--hairline) 1px,
+      transparent 1px
+    );
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  /* Fade the matrix in from the top, gone by ~70% down — keeps it a hint. */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.18) 35%,
+    transparent 72%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.18) 35%,
+    transparent 72%
+  );
+  opacity: 0.6;
+}
+
+/* One cool aurora wash, anchored top-right, behind the dot grid. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      48% 42% at 82% -6%,
+      var(--accent-glow) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      42% 38% at 6% 4%,
+      var(--violet-glow) 0%,
+      transparent 58%
+    );
 }
 
 img,
@@ -147,17 +203,29 @@ p {
 
 /* ---- Eyebrow label --------------------------------------------------- */
 .eyebrow {
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: var(--fs-eyebrow);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-dim);
   margin: 0;
+}
+
+/* A faint mono prompt glyph before each eyebrow — the "tech" tell, subtle. */
+.eyebrow::before {
+  content: "// ";
+  color: var(--accent);
+  opacity: 0.55;
 }
 
 .eyebrow--muted {
   color: var(--ink-3);
+}
+
+.eyebrow--muted::before {
+  color: var(--ink-3);
+  opacity: 0.7;
 }
 
 .lead {

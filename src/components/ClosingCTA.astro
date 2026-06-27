@@ -33,6 +33,8 @@ const EMAIL = "hello@slateandco.com";
     position: relative;
     overflow: clip;
     padding-block: clamp(6rem, 4rem + 12vw, 12rem);
+    background: var(--bg-2);
+    border-top: 1px solid var(--hairline);
   }
 
   .closing__inner {
@@ -85,14 +87,35 @@ const EMAIL = "hello@slateandco.com";
 
   .closing__glow {
     position: absolute;
-    inset: auto 0 -40% 0;
-    height: 80%;
+    inset: auto 0 -45% 0;
+    height: 90%;
     z-index: 0;
     background: radial-gradient(
-      50% 60% at 50% 100%,
-      color-mix(in srgb, var(--accent) 28%, transparent) 0%,
-      transparent 70%
+        46% 62% at 50% 100%,
+        color-mix(in srgb, var(--accent) 22%, transparent) 0%,
+        transparent 68%
+      ),
+      radial-gradient(
+        30% 50% at 22% 100%,
+        var(--violet-glow) 0%,
+        transparent 70%
+      );
+    pointer-events: none;
+  }
+
+  /* A hairline scanline pair across the top — a restrained tech frame. */
+  .closing::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--accent-dim) 50%,
+      transparent
     );
+    opacity: 0.35;
     pointer-events: none;
   }
 </style>

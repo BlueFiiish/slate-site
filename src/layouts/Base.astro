@@ -3,7 +3,7 @@ import "../styles/global.css";
 // Import the two above-the-fold latin faces as URL assets so the preload href
 // matches the exact hashed file the bundled @font-face actually fetches
 // (these resolve to /<base>/_astro/<hash>.woff2 — and respect the base path).
-import frauncesLatin from "@fontsource-variable/fraunces/files/fraunces-latin-standard-normal.woff2?url";
+import spaceGroteskLatin from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
 import interTightLatin from "@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url";
 
 export interface Props {
@@ -96,7 +96,7 @@ const jsonLd = {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#fbfbf8" />
+    <meta name="theme-color" content="#0b0e14" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -114,7 +114,7 @@ const jsonLd = {
          match the @font-face src exactly, so the fetch is reused not wasted). -->
     <link
       rel="preload"
-      href={frauncesLatin}
+      href={spaceGroteskLatin}
       as="font"
       type="font/woff2"
       crossorigin
@@ -129,7 +129,7 @@ const jsonLd = {
 
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a18'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='18' fill='%23fbfbf8' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121821'/%3E%3Crect x='0.5' y='0.5' width='31' height='31' rx='6.5' fill='none' stroke='%232dd4bf' stroke-opacity='0.5'/%3E%3Ctext x='16' y='22' font-family='ui-monospace,monospace' font-weight='600' font-size='17' fill='%232dd4bf' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E"
     />
 
     <script

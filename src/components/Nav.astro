@@ -63,12 +63,14 @@
     width: 34px;
     height: 34px;
     border-radius: var(--radius-sm);
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--font-display);
-    font-size: 1.0625rem;
+    background: var(--panel);
+    border: 1px solid var(--hairline-strong);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 1rem;
     font-weight: 600;
     line-height: 1;
+    box-shadow: var(--glow-cta);
   }
 
   .nav__links {
@@ -120,7 +122,7 @@
 
   @keyframes nav-solidify {
     to {
-      background-color: color-mix(in srgb, var(--paper) 88%, transparent);
+      background-color: color-mix(in srgb, var(--bg) 82%, transparent);
       border-bottom-color: var(--hairline);
       -webkit-backdrop-filter: saturate(1.4) blur(8px);
       backdrop-filter: saturate(1.4) blur(8px);
@@ -129,7 +131,7 @@
 
   /* Fallback: solid from the start so it never reads as broken. */
   :global(html.no-scroll-timeline) .nav {
-    background-color: color-mix(in srgb, var(--paper) 92%, transparent);
+    background-color: color-mix(in srgb, var(--bg) 88%, transparent);
     border-bottom-color: var(--hairline);
     -webkit-backdrop-filter: saturate(1.4) blur(8px);
     backdrop-filter: saturate(1.4) blur(8px);

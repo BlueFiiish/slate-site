@@ -1,26 +1,35 @@
 ---
 /*
-  LaptopShowcase — a scroll-scrubbed CINEMATIC DEMO where the laptop is the
-  HERO and, for each of six features, the DEVICE ITSELF demonstrates the
-  feature on the real rebuilt site. SHOW, DON'T TELL: the screen pans, the page
-  snaps in fast, the laptop MORPHS into a phone, a designed Google listing
-  slides up, an old template wipes into the rebuild, then it settles on the
-  studio wordmark. A small, subtle caption labels each beat beside the device —
-  it never covers the laptop, never competes with it. No colored panel.
+  LaptopShowcase — a scroll-scrubbed CINEMATIC DEMO in the professional-cyber
+  theme. The laptop is the HERO: it sits CENTERED in the pinned viewport with
+  generous room below for a caption that is ALWAYS fully visible. For each of
+  six features the DEVICE itself demonstrates the feature on the real rebuilt
+  site. SHOW, DON'T TELL.
+
+  NEW in this overhaul:
+  - Laptop is vertically centered in the pin with reserved caption space below;
+    captions never clip.
+  - TRUE LAPTOP -> PHONE MORPH: the same device frame physically transforms —
+    its width narrows, the screen's clip-path squeezes from 16:10 to a 9:19.5
+    phone column, corner radius grows, base folds away, a notch fades in. One
+    object morphing, not a crossfade to a separate phone.
+  - DRAMATIC MOVEMENT: each beat transition adds a kinetic device motion — a
+    Y-axis flip / barrel rotate — on top of the zoom + pronounced tilt.
+  - CYBER HUD: a faint grid, corner brackets/reticle, scan glow, a live HUD
+    metric label, and connector lines frame the device during the sequence.
 
   HOW IT SHIPS (per the studio's elite-toolchain + motion rules):
-  - Performance-budgeted island. GSAP + ScrollTrigger is loaded LAZILY via a
-    dynamic import gated behind an IntersectionObserver (island-on-visible), so
-    the GSAP bundle is fetched only when the section nears the viewport and
-    NEVER blocks the hero/LCP. Upfront JS is tiny (the observer shim only).
-  - The whole demo is DOM + CSS + GSAP — NO mp4/webm. Real screenshots
-    (astro:assets, AVIF, dimension-locked) plus real text; every transition is
-    transform / opacity / clip-path only (compositor-friendly).
+  - Performance-budgeted island. GSAP + ScrollTrigger loaded LAZILY via a
+    dynamic import gated behind an IntersectionObserver, so the GSAP bundle is
+    fetched only when the section nears the viewport and NEVER blocks LCP.
+  - DOM + CSS + GSAP — NO mp4/webm. Real screenshots (astro:assets, AVIF,
+    dimension-locked) + real text; every transition is transform / opacity /
+    clip-path only (compositor-friendly).
   - Static fallback: with JS off (or before hydration) the section renders
-    complete and legible — the laptop shows the hero rebuild and ALL SIX
-    features render as a readable list below it. Nothing is hidden.
+    complete and legible — the laptop shows the closing wordmark and ALL SIX
+    features render as a readable list below. Nothing is hidden.
   - prefers-reduced-motion: the script bails before building; CSS shows the
-    settled end-state (closing frame + the six features listed), no scrub.
+    settled end-state, no scrub.
   - Route-leave cleanup: the gsap.context is reverted on astro:before-swap AND
     pagehide so View-Transition navigation can't leak instances/memory.
   - Budget: section height is reserved (pin host) so pinning adds zero CLS.
@@ -28,12 +37,11 @@
 import { Image } from "astro:assets";
 import anaHero from "../assets/captures/ana-desktop-top.png";
 import anaGallery from "../assets/captures/ana-desktop-gallery.png";
-import anaLower from "../assets/captures/ana-desktop-lower.png";
 import anaMobile from "../assets/captures/ana-mobile-top.png";
 import anaBefore from "../assets/captures/ana-before-desktop.png";
 
 // The six features, in demo order. Each one is DEMONSTRATED on the device;
-// the caption is a tiny kicker + one short line that labels what's shown.
+// the caption is a tiny mono kicker + one short line that labels what's shown.
 const features = [
   {
     n: "01",
@@ -69,192 +77,208 @@ const features = [
 ---
 
 <section class="showcase" id="showcase" aria-labelledby="showcase-heading">
-  <!-- TRACK: its height is reserved statically in CSS (var(--track-h)) so the
-       scrubbed pin is HEIGHT-NEUTRAL — ScrollTrigger pins the inner viewport
-       with pinSpacing:false and never inserts a spacer, so nothing below ever
-       shifts. CLS = 0. With JS off, the track collapses to content height. -->
+  <!-- TRACK: its height is reserved statically in CSS (var via .js-motion) so
+       the sticky pin is HEIGHT-NEUTRAL — no ScrollTrigger pin, no spacer, so
+       nothing below ever shifts. CLS = 0. With JS off the track collapses. -->
   <div class="showcase__track" data-showcase-track>
     <div class="showcase__pin" data-showcase-pin>
-    <div class="showcase__inner container container--feature">
-      <header class="showcase__head" data-showcase-head>
-        <p class="eyebrow">A closer look</p>
-        <h2 id="showcase-heading" class="showcase__headline">
-          Watch what you actually get.
-        </h2>
-        <p class="showcase__scrollhint" data-showcase-hint aria-hidden="true">
-          Scroll to play
-        </p>
-      </header>
+      <!-- Cyber HUD backdrop: faint grid + scan glow, behind the device.
+           Decorative, aria-hidden, painted only once live (no static cost). -->
+      <div class="hud" data-hud aria-hidden="true">
+        <div class="hud__grid"></div>
+        <div class="hud__scan" data-hud-scan></div>
+      </div>
 
-      <!-- The stage holds the device (centered) and the small caption that
-           sits beside it. On the demo, the caption swaps per beat; statically
-           it's empty (the full list below carries the no-JS content). -->
-      <div class="showcase__stage">
-        <!-- THE DEVICE: pinned, zooming, tilting (pronounced 3D). -->
-        <div class="showcase__device" data-showcase-device>
-          <div class="showcase__glow" aria-hidden="true"></div>
+      <div class="showcase__inner container container--feature">
+        <header class="showcase__head" data-showcase-head>
+          <p class="eyebrow">A closer look</p>
+          <h2 id="showcase-heading" class="showcase__headline">
+            Watch what you actually get.
+          </h2>
+          <p class="showcase__scrollhint" data-showcase-hint aria-hidden="true">
+            Scroll to play
+          </p>
+        </header>
 
-          <!-- LAPTOP — the hero. Recedes/folds for the phone morph. -->
-          <figure class="laptop" data-laptop>
-            <div class="laptop__bezel">
-              <span class="laptop__cam" aria-hidden="true"></span>
-              <div class="laptop__screen" data-screen>
-                <!-- == FRAME: hero (pan/zoom across the bespoke design) == -->
-                <div class="frame" data-frame="hero" data-active>
-                  <Image
-                    class="frame__img frame__img--pan"
-                    data-pan
-                    src={anaHero}
-                    alt="The Ana's Confections homepage Slate rebuilt, shown full-screen."
-                    width={1280}
-                    sizes="(min-width: 1024px) 780px, 92vw"
-                    format="avif"
-                    loading="lazy"
-                  />
-                </div>
+        <!-- STAGE: the device is centered; the caption sits in reserved room
+             BELOW it and is always fully visible. -->
+        <div class="showcase__stage">
+          <!-- THE DEVICE: pinned, zooming, tilting, flipping (pronounced 3D). -->
+          <div class="showcase__device" data-showcase-device>
+            <div class="showcase__glow" aria-hidden="true"></div>
 
-                <!-- == FRAME: gallery (the fast-paint cascade demo) == -->
-                <div class="frame frame--cascade" data-frame="gallery" aria-hidden="true">
-                  <Image
-                    class="frame__img"
-                    src={anaGallery}
-                    alt="A section of Ana's rebuilt site showing the cake gallery grid."
-                    width={1280}
-                    sizes="(min-width: 1024px) 780px, 92vw"
-                    format="avif"
-                    loading="lazy"
-                  />
-                  <!-- light "snap-in" sheen rows to convey instant paint -->
-                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
-                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
-                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
-                  <span class="speedcue" data-speedcue aria-hidden="true">
-                    <span class="speedcue__dot"></span>0.8s
-                  </span>
-                </div>
+            <!-- Corner reticle brackets + connector HUD label, around device. -->
+            <div class="reticle" data-reticle aria-hidden="true">
+              <span class="reticle__c reticle__c--tl"></span>
+              <span class="reticle__c reticle__c--tr"></span>
+              <span class="reticle__c reticle__c--bl"></span>
+              <span class="reticle__c reticle__c--br"></span>
+              <span class="reticle__line" data-reticle-line></span>
+              <span class="hudlabel" data-hudlabel>
+                <span class="hudlabel__dot"></span>
+                <span class="hudlabel__k" data-hudlabel-k>RENDER</span>
+                <span class="hudlabel__v" data-hudlabel-v>READY</span>
+              </span>
+            </div>
 
-                <!-- == FRAME: Google Business listing (designed mock) == -->
-                <div class="frame frame--google" data-frame="google" aria-hidden="true">
-                  <div class="gbiz" aria-hidden="true">
-                    <div class="gbiz__main">
-                      <p class="gbiz__kicker">Bakery &middot; Rosenberg, TX</p>
-                      <h3 class="gbiz__name">Ana&rsquo;s Confections</h3>
-                      <p class="gbiz__rating">
-                        <strong>4.8</strong>
-                        <span class="gbiz__stars" aria-hidden="true">
-                          <span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span class="is-half">&#9733;</span>
-                        </span>
-                        <span class="gbiz__count">Google reviews</span>
-                      </p>
-                      <ul class="gbiz__rows">
-                        <li><span class="gbiz__ico" data-ico="open"></span><span><strong>Open</strong> &middot; Closes 6 PM</span></li>
-                        <li><span class="gbiz__ico" data-ico="pin"></span>808 Third St, Rosenberg, TX</li>
-                        <li><span class="gbiz__ico" data-ico="phone"></span>(979) 533-0651</li>
-                      </ul>
-                      <div class="gbiz__chips">
-                        <span class="gbiz__chip gbiz__chip--accent">Directions</span>
-                        <span class="gbiz__chip">Website</span>
-                        <span class="gbiz__chip">Call</span>
-                      </div>
-                    </div>
-                    <div class="gbiz__map" aria-hidden="true">
-                      <span class="gbiz__road gbiz__road--a"></span>
-                      <span class="gbiz__road gbiz__road--b"></span>
-                      <span class="gbiz__road gbiz__road--c"></span>
-                      <span class="gbiz__marker"></span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- == FRAME: before/after wipe (old template -> rebuild) == -->
-                <div class="frame frame--wipe" data-frame="wipe" aria-hidden="true">
-                  <!-- AFTER (rebuild) sits underneath, full -->
-                  <Image
-                    class="frame__img"
-                    src={anaHero}
-                    alt="The rebuilt Ana's Confections homepage."
-                    width={1280}
-                    sizes="(min-width: 1024px) 780px, 92vw"
-                    format="avif"
-                    loading="lazy"
-                  />
-                  <!-- BEFORE (old template) wipes away to reveal it -->
-                  <div class="wipe__before" data-wipe>
+            <!-- LAPTOP — the hero. The SAME frame morphs into a phone (beat 3)
+                 by narrowing + clipping + rounding; base folds away. -->
+            <figure class="laptop" data-laptop>
+              <div class="laptop__bezel" data-bezel>
+                <span class="laptop__cam" aria-hidden="true"></span>
+                <span class="laptop__notch" data-notch aria-hidden="true"></span>
+                <div class="laptop__screen" data-screen>
+                  <!-- == FRAME: hero (pan/zoom across the bespoke design) == -->
+                  <div class="frame" data-frame="hero" data-active>
                     <Image
-                      class="frame__img"
-                      src={anaBefore}
-                      alt="The original Ana's Confections template site, before the rebuild."
+                      class="frame__img frame__img--pan"
+                      data-pan
+                      src={anaHero}
+                      alt="The Ana's Confections homepage Slate rebuilt, shown full-screen."
                       width={1280}
                       sizes="(min-width: 1024px) 780px, 92vw"
                       format="avif"
                       loading="lazy"
                     />
-                    <span class="wipe__tag">Before</span>
                   </div>
-                  <span class="wipe__handle" data-wipe-handle aria-hidden="true"></span>
-                  <span class="wipe__tag wipe__tag--after">After</span>
-                </div>
 
-                <!-- == CLOSING wordmark (also the no-JS settled end-state) == -->
-                <div class="closing" data-closing>
-                  <span class="closing__mark">Slate &amp; Co.</span>
-                  <p class="closing__line">One maker. Real rebuilds.</p>
-                </div>
+                  <!-- == FRAME: gallery (the fast-paint cascade demo) == -->
+                  <div class="frame frame--cascade" data-frame="gallery" aria-hidden="true">
+                    <Image
+                      class="frame__img"
+                      src={anaGallery}
+                      alt="A section of Ana's rebuilt site showing the cake gallery grid."
+                      width={1280}
+                      sizes="(min-width: 1024px) 780px, 92vw"
+                      format="avif"
+                      loading="lazy"
+                    />
+                    <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                    <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                    <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                    <span class="speedcue" data-speedcue aria-hidden="true">
+                      <span class="speedcue__dot"></span>0.8s
+                    </span>
+                  </div>
 
-                <span class="screen__vignette" aria-hidden="true"></span>
+                  <!-- == FRAME: mobile screenshot (revealed under the morph) == -->
+                  <div class="frame frame--mobile" data-frame="mobile" aria-hidden="true">
+                    <Image
+                      class="frame__img frame__img--mobile"
+                      src={anaMobile}
+                      alt="The same Ana's Confections site shown on a phone."
+                      width={760}
+                      sizes="(min-width: 1024px) 300px, 60vw"
+                      format="avif"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <!-- == FRAME: Google Business listing (designed mock) == -->
+                  <div class="frame frame--google" data-frame="google" aria-hidden="true">
+                    <div class="gbiz" aria-hidden="true">
+                      <div class="gbiz__main">
+                        <p class="gbiz__kicker">Bakery &middot; Rosenberg, TX</p>
+                        <h3 class="gbiz__name">Ana&rsquo;s Confections</h3>
+                        <p class="gbiz__rating">
+                          <strong>4.8</strong>
+                          <span class="gbiz__stars" aria-hidden="true">
+                            <span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span class="is-half">&#9733;</span>
+                          </span>
+                          <span class="gbiz__count">Google reviews</span>
+                        </p>
+                        <ul class="gbiz__rows">
+                          <li><span class="gbiz__ico" data-ico="open"></span><span><strong>Open</strong> &middot; Closes 6 PM</span></li>
+                          <li><span class="gbiz__ico" data-ico="pin"></span>808 Third St, Rosenberg, TX</li>
+                          <li><span class="gbiz__ico" data-ico="phone"></span>(979) 533-0651</li>
+                        </ul>
+                        <div class="gbiz__chips">
+                          <span class="gbiz__chip gbiz__chip--accent">Directions</span>
+                          <span class="gbiz__chip">Website</span>
+                          <span class="gbiz__chip">Call</span>
+                        </div>
+                      </div>
+                      <div class="gbiz__map" aria-hidden="true">
+                        <span class="gbiz__road gbiz__road--a"></span>
+                        <span class="gbiz__road gbiz__road--b"></span>
+                        <span class="gbiz__road gbiz__road--c"></span>
+                        <span class="gbiz__marker"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- == FRAME: before/after wipe (old template -> rebuild) == -->
+                  <div class="frame frame--wipe" data-frame="wipe" aria-hidden="true">
+                    <Image
+                      class="frame__img"
+                      src={anaHero}
+                      alt="The rebuilt Ana's Confections homepage."
+                      width={1280}
+                      sizes="(min-width: 1024px) 780px, 92vw"
+                      format="avif"
+                      loading="lazy"
+                    />
+                    <div class="wipe__before" data-wipe>
+                      <Image
+                        class="frame__img"
+                        src={anaBefore}
+                        alt="The original Ana's Confections template site, before the rebuild."
+                        width={1280}
+                        sizes="(min-width: 1024px) 780px, 92vw"
+                        format="avif"
+                        loading="lazy"
+                      />
+                      <span class="wipe__tag">Before</span>
+                    </div>
+                    <span class="wipe__handle" data-wipe-handle aria-hidden="true"></span>
+                    <span class="wipe__tag wipe__tag--after">After</span>
+                  </div>
+
+                  <!-- == CLOSING wordmark (also the no-JS settled end-state) == -->
+                  <div class="closing" data-closing>
+                    <span class="closing__mark">Slate &amp; Co.</span>
+                    <p class="closing__line">One maker. Real rebuilds.</p>
+                  </div>
+
+                  <span class="screen__vignette" aria-hidden="true"></span>
+                  <span class="screen__scanline" data-screenscan aria-hidden="true"></span>
+                </div>
               </div>
-            </div>
-            <div class="laptop__base" aria-hidden="true">
-              <span class="laptop__hinge"></span>
-            </div>
-          </figure>
+              <div class="laptop__base" data-base aria-hidden="true">
+                <span class="laptop__hinge"></span>
+              </div>
+            </figure>
+          </div>
 
-          <!-- PHONE — hidden until the morph beat, then scales up centered
-               over the receding laptop, screen showing the real mobile layout. -->
-          <figure class="phone" data-phone aria-hidden="true">
-            <span class="phone__notch" aria-hidden="true"></span>
-            <div class="phone__screen">
-              <Image
-                class="phone__img"
-                src={anaMobile}
-                alt="The same Ana's Confections site shown on a phone."
-                width={760}
-                sizes="(min-width: 1024px) 280px, 56vw"
-                format="avif"
-                loading="lazy"
-              />
+          <!-- Caption room is RESERVED below the device (in flow, zero CLS) and
+               the caption itself sits inside it — always fully visible. -->
+          <div class="showcase__capwrap">
+            <div class="showcase__caption" data-caption aria-hidden="true">
+              {
+                features.map((feat) => (
+                  <p class="cap" data-cap={feat.n}>
+                    <span class="cap__kicker">
+                      <span class="cap__n">{feat.n}</span>
+                      {feat.kicker}
+                    </span>
+                    <span class="cap__line">{feat.line}</span>
+                  </p>
+                ))
+              }
             </div>
-          </figure>
+          </div>
         </div>
 
-        <!-- Reserve the caption's vertical room in flow (zero CLS) ... -->
-        <div class="showcase__capspace" aria-hidden="true"></div>
-        <!-- ... while the caption itself is absolutely positioned inside it.
-             Lives just below the device; never over it. Static = hidden (the
-             list below carries the no-JS content). -->
-        <div class="showcase__caption" data-caption aria-hidden="true">
-          {
-            features.map((feat) => (
-              <p class="cap" data-cap={feat.n}>
-                <span class="cap__kicker">{feat.kicker}</span>
-                <span class="cap__line">{feat.line}</span>
-              </p>
-            ))
-          }
-        </div>
+        <p class="showcase__credit">
+          A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
+        </p>
       </div>
-
-      <p class="showcase__credit">
-        A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
-      </p>
-
-    </div>
     </div>
   </div>
 
-  <!-- == STATIC / NO-JS / a11y list. OUTSIDE the sticky track so it never
-       pins and never shifts. Always in the DOM so all six features are legible
-       without the demo; the live island hides it (the screen plays them). == -->
+  <!-- == STATIC / NO-JS / a11y list. OUTSIDE the sticky track so it never pins
+       and never shifts. Always in the DOM so all six features are legible
+       without the demo; the live island hides it. == -->
   <ul class="showcase__list container container--feature" data-showcase-list>
     {
       features.map((feat) => (
@@ -285,9 +309,6 @@ const features = [
     let built = false;
     let teardown: (() => void) | null = null;
 
-    // Wait for fonts + a couple of frames so ScrollTrigger pins against the
-    // FINAL geometry — late text/image paint can't then shift the pinned
-    // layout (keeps CLS at 0 in cold Lighthouse runs).
     function settled(): Promise<void> {
       return new Promise((resolve) => {
         const ready = (document as any).fonts?.ready ?? Promise.resolve();
@@ -317,19 +338,21 @@ const features = [
         Array.from(section!.querySelectorAll<HTMLElement>(sel));
 
       const track = q("[data-showcase-track]");
-      const pin = q("[data-showcase-pin]");
       const device = q("[data-showcase-device]");
       const laptop = q("[data-laptop]");
-      const phone = q("[data-phone]");
+      const bezel = q("[data-bezel]");
+      const screen = q("[data-screen]");
+      const base = q("[data-base]");
+      const notch = q("[data-notch]");
       const hint = q("[data-showcase-hint]");
       const closing = q("[data-closing]");
-      if (!track || !pin || !device || !laptop || !phone) return;
+      if (!track || !device || !laptop || !bezel || !screen) return;
 
-      const frame = (name: string) =>
-        q(`[data-frame="${name}"]`);
+      const frame = (name: string) => q(`[data-frame="${name}"]`);
       const f = {
         hero: frame("hero"),
         gallery: frame("gallery"),
+        mobile: frame("mobile"),
         google: frame("google"),
         wipe: frame("wipe"),
       };
@@ -341,18 +364,30 @@ const features = [
       const caps = qa("[data-cap]");
       const cap = (n: string) => caps.find((c) => c.dataset.cap === n) || null;
 
+      // HUD bits
+      const hud = q("[data-hud]");
+      const hudScan = q("[data-hud-scan]");
+      const reticle = q("[data-reticle]");
+      const reticleLine = q("[data-reticle-line]");
+      const hudK = q("[data-hudlabel-k]");
+      const hudV = q("[data-hudlabel-v]");
+      const screenScan = q("[data-screenscan]");
+
+      // Set the rolling HUD label to a beat's spec text.
+      const setHud = (k: string, v: string) => {
+        if (hudK) hudK.textContent = k;
+        if (hudV) hudV.textContent = v;
+      };
+
       // Hand control to GSAP: CSS static end-state styles step aside.
       section!.classList.add("is-live");
 
       const ctx = gsap.context(() => {
         // ----- explicit start-state (transform / opacity / clip only) -----
-        // Pronounced 3D tilt at rest; settles as it zooms in.
-        gsap.set(device, { scale: 0.82, rotateX: 12, rotateY: -16, y: 10 });
-        gsap.set(laptop, { autoAlpha: 1, scale: 1, transformOrigin: "50% 60%" });
-        gsap.set(phone, { autoAlpha: 0, scale: 0.46, y: 8 });
+        gsap.set(device, { scale: 0.84, rotateX: 13, rotateY: -17, y: 6, transformOrigin: "50% 55%" });
+        gsap.set(laptop, { autoAlpha: 1, transformOrigin: "50% 56%" });
 
-        // Frames: only hero visible to open.
-        const allFrames = [f.hero, f.gallery, f.google, f.wipe].filter(
+        const allFrames = [f.hero, f.gallery, f.mobile, f.google, f.wipe].filter(
           Boolean
         ) as HTMLElement[];
         gsap.set(allFrames, { autoAlpha: 0 });
@@ -362,16 +397,27 @@ const features = [
         gsap.set(cascade, { yPercent: 16, autoAlpha: 0 });
         if (speedcue) gsap.set(speedcue, { autoAlpha: 0, scale: 0.9 });
         if (wipeBefore) gsap.set(wipeBefore, { clipPath: "inset(0 0% 0 0)" });
-        if (wipeHandle) gsap.set(wipeHandle, { left: "100%", autoAlpha: 0 });
+        // handle travels via transform (x) only -> no layout shift. Its full
+        // travel = the screen's pixel width (recomputed on refresh).
+        const seamW = () => (screen ? screen.getBoundingClientRect().width : 600);
+        if (wipeHandle) gsap.set(wipeHandle, { x: seamW(), autoAlpha: 0 });
 
-        gsap.set(caps, { autoAlpha: 0, y: 12 });
-        if (closing) gsap.set(closing, { autoAlpha: 0, scale: 1.05 });
+        // Morph state vars: --morph 0 = laptop, 1 = phone. CSS reads it to
+        // narrow the bezel, clip the screen to a phone column, round corners,
+        // fold the base and reveal the notch — all from ONE driven value.
+        if (bezel) gsap.set(bezel, { "--morph": 0 } as any);
+        if (notch) gsap.set(notch, { autoAlpha: 0 });
 
-        // The pin is done by CSS `position: sticky` on the inner viewport, and
-        // the TRACK reserves its full height statically — so there is NO
-        // ScrollTrigger pin and NO spacer insertion. Nothing below ever shifts
-        // (CLS = 0). ScrollTrigger only SCRUBS the timeline across the track's
-        // travel (track height - one viewport).
+        gsap.set(caps, { autoAlpha: 0, y: 14 });
+        if (closing) gsap.set(closing, { autoAlpha: 0, scale: 1.06 });
+
+        // HUD start state
+        if (hud) gsap.set(hud, { autoAlpha: 0 });
+        if (reticle) gsap.set(reticle, { autoAlpha: 0, scale: 1.04 });
+        if (hudScan) gsap.set(hudScan, { yPercent: -120, autoAlpha: 0 });
+        if (screenScan) gsap.set(screenScan, { yPercent: -120, autoAlpha: 0 });
+        setHud("RENDER", "READY");
+
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
@@ -385,145 +431,156 @@ const features = [
 
         const E = "power2.inOut";
 
-        // helper to bring a caption in / out at given times
         const capIn = (n: string, at: number) => {
           const c = cap(n);
           if (c) tl.to(c, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.04 }, at);
         };
         const capOut = (n: string, at: number) => {
           const c = cap(n);
-          if (c) tl.to(c, { autoAlpha: 0, y: -10, ease: "power2.in", duration: 0.03 }, at);
+          if (c) tl.to(c, { autoAlpha: 0, y: -12, ease: "power2.in", duration: 0.03 }, at);
+        };
+
+        // A reusable "scan sweep" inside the screen on a beat change.
+        const scanSweep = (at: number) => {
+          if (!screenScan) return;
+          tl.fromTo(
+            screenScan,
+            { yPercent: -120, autoAlpha: 0.9 },
+            { yPercent: 120, autoAlpha: 0, ease: "power1.in", duration: 0.06 },
+            at
+          );
         };
 
         // ============================================================
-        // BEAT 0 (0.00 -> 0.08): OPEN. Laptop zooms in, tilt settles.
-        // Real hero on screen. Hint fades.
+        // BEAT 0 (0.00 -> 0.08): OPEN. Device zooms in, tilt settles, the
+        // HUD frame powers on (grid + reticle fade in, scan sweeps).
         // ============================================================
         tl.to(device, { scale: 1, rotateX: 6, rotateY: -8, y: 0, ease: E, duration: 0.08 }, 0);
         if (hint) tl.to(hint, { autoAlpha: 0, duration: 0.03 }, 0.02);
+        if (hud) tl.to(hud, { autoAlpha: 1, ease: "power2.out", duration: 0.05 }, 0.01);
+        if (reticle) tl.to(reticle, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.02);
+        if (hudScan)
+          tl.fromTo(hudScan, { yPercent: -120, autoAlpha: 0.5 }, { yPercent: 120, autoAlpha: 0, ease: "power1.in", duration: 0.07 }, 0.02);
 
         // ============================================================
-        // BEAT 1 (0.08 -> 0.18): CUSTOM-DESIGNED.
-        // Tilt goes flat; the screen does a slow, premium pan/zoom across
-        // the bespoke hero (showing the craft). Caption 01.
+        // BEAT 1 (0.08 -> 0.18): CUSTOM-DESIGNED. Tilt flattens, a barrel
+        // rotate settles, the screen does a slow premium pan/zoom. Caption 01.
         // ============================================================
-        tl.to(device, { rotateX: 0, rotateY: 0, ease: E, duration: 0.06 }, 0.08);
+        tl.to(device, { rotateX: 0, rotateY: 0, rotateZ: 0, ease: E, duration: 0.06 }, 0.08);
         capIn("01", 0.1);
+        tl.call(() => setHud("DESIGN", "BESPOKE"), [], 0.09);
         if (pan)
           tl.to(pan, { scale: 1.04, yPercent: -10, xPercent: 4, ease: E, duration: 0.14 }, 0.06);
 
         // ============================================================
-        // BEAT 2 (0.20 -> 0.32): LOADS IN ~1s.
-        // Crossfade to the gallery; its rows SNAP up + a "0.8s" cue pops —
-        // conveying an instant, crisp paint. Caption 02.
+        // BEAT 2 (0.20 -> 0.32): LOADS IN ~1s. A quick Y-flip spins to the
+        // gallery; rows SNAP up + a "0.8s" cue pops. Caption 02.
         // ============================================================
         capOut("01", 0.2);
-        tl.to(f.hero!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.2);
-        tl.to(f.gallery!, { autoAlpha: 1, ease: E, duration: 0.04 }, 0.21);
-        capIn("02", 0.23);
-        // crisp cascade: rows snap in fast, slightly staggered
+        // dramatic Y-axis flip transition between frames
+        tl.to(device, { rotateY: -90, ease: "power2.in", duration: 0.04 }, 0.2);
+        tl.set(f.hero!, { autoAlpha: 0 }, 0.24);
+        tl.set(f.gallery!, { autoAlpha: 1 }, 0.24);
+        scanSweep(0.24);
+        tl.to(device, { rotateY: 0, ease: "power2.out", duration: 0.05 }, 0.24);
+        capIn("02", 0.25);
+        tl.call(() => setHud("PAINT", "0.8s"), [], 0.23);
         tl.to(
           cascade,
-          {
-            yPercent: 0,
-            autoAlpha: 1,
-            ease: "power3.out",
-            duration: 0.05,
-            stagger: 0.018,
-          },
-          0.22
+          { yPercent: 0, autoAlpha: 1, ease: "power3.out", duration: 0.05, stagger: 0.018 },
+          0.25
         );
         if (speedcue)
-          tl.to(speedcue, { autoAlpha: 1, scale: 1, ease: "back.out(2)", duration: 0.05 }, 0.26);
-        // fade the helper sheens back out so the real shot reads clean
-        tl.to(cascade, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.3);
+          tl.to(speedcue, { autoAlpha: 1, scale: 1, ease: "back.out(2)", duration: 0.05 }, 0.28);
+        tl.to(cascade, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.31);
 
         // ============================================================
-        // BEAT 3 (0.34 -> 0.48): RIGHT ON EVERY PHONE — the morph.
-        // The laptop RECEDES + folds back; a PHONE scales up centered with
-        // the real mobile layout. The money beat. Caption 03.
+        // BEAT 3 (0.34 -> 0.50): RIGHT ON EVERY PHONE — the TRUE MORPH.
+        // The SAME frame physically transforms laptop -> phone: bezel narrows,
+        // the screen clips to a 9:19.5 column, corners round, base folds away,
+        // notch fades in. Screen content crossfades to the mobile shot. The
+        // money beat. Caption 03.
         // ============================================================
-        capOut("02", 0.34);
-        if (speedcue) tl.to(speedcue, { autoAlpha: 0, duration: 0.03 }, 0.34);
-        // laptop recedes + tips back as if folding away
-        tl.to(
-          laptop,
-          { scale: 0.74, autoAlpha: 0, rotateX: 18, y: 24, ease: E, duration: 0.1 },
-          0.35
-        );
-        // phone rises into place, centered
-        tl.to(
-          phone,
-          { autoAlpha: 1, scale: 1, y: 0, ease: "power3.out", duration: 0.11 },
-          0.37
-        );
-        capIn("03", 0.42);
+        capOut("02", 0.33);
+        if (speedcue) tl.to(speedcue, { autoAlpha: 0, duration: 0.03 }, 0.33);
+        tl.call(() => setHud("VIEWPORT", "390px"), [], 0.34);
+        // crossfade screen content gallery -> mobile under the clip
+        tl.to(f.gallery!, { autoAlpha: 0, ease: E, duration: 0.05 }, 0.35);
+        tl.to(f.mobile!, { autoAlpha: 1, ease: E, duration: 0.05 }, 0.36);
+        // a subtle barrel rotate as it squeezes — feels physical
+        tl.to(device, { rotateY: 7, ease: "power2.inOut", duration: 0.07 }, 0.35);
+        tl.to(device, { rotateY: 0, ease: "power2.inOut", duration: 0.07 }, 0.42);
+        // THE morph: drive --morph 0 -> 1 (CSS does the geometry). Slower +
+        // wider window so the mid-transition is clearly visible while scrolling.
+        if (bezel)
+          tl.to(bezel, { "--morph": 1, ease: "power2.inOut", duration: 0.13 } as any, 0.36);
+        if (base)
+          tl.to(base, { autoAlpha: 0, scaleX: 0.2, ease: "power2.in", duration: 0.09 }, 0.36);
+        if (notch)
+          tl.to(notch, { autoAlpha: 1, ease: "power2.out", duration: 0.05 }, 0.47);
+        capIn("03", 0.49);
 
-        // hold the phone a touch, then morph BACK to laptop for beat 4
-        tl.to(phone, { scale: 0.46, autoAlpha: 0, y: 8, ease: E, duration: 0.08 }, 0.5);
-        tl.to(
-          laptop,
-          { scale: 1, autoAlpha: 1, rotateX: 0, y: 0, ease: "power3.out", duration: 0.09 },
-          0.52
-        );
-        capOut("03", 0.5);
-
-        // ============================================================
-        // BEAT 4 (0.54 -> 0.66): GOOGLE LISTING, HANDLED.
-        // Screen shifts to the designed Google-Business mock (slides up).
-        // Caption 04.
-        // ============================================================
-        tl.to(f.gallery!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.54);
-        tl.fromTo(
-          f.google!,
-          { autoAlpha: 0, yPercent: 6 },
-          { autoAlpha: 1, yPercent: 0, ease: E, duration: 0.06 },
-          0.55
-        );
-        capIn("04", 0.58);
+        // hold the phone a beat, then morph BACK to laptop for the next beat
+        tl.to(f.mobile!, { autoAlpha: 0, ease: E, duration: 0.05 }, 0.55);
+        if (notch) tl.to(notch, { autoAlpha: 0, duration: 0.03 }, 0.55);
+        if (bezel)
+          tl.to(bezel, { "--morph": 0, ease: "power2.inOut", duration: 0.1 } as any, 0.56);
+        if (base)
+          tl.to(base, { autoAlpha: 1, scaleX: 1, ease: "power2.out", duration: 0.07 }, 0.58);
+        capOut("03", 0.58);
 
         // ============================================================
-        // BEAT 5 (0.68 -> 0.84): REAL BEFORE & AFTERS.
-        // The old template fills the screen, then WIPES left-to-right to
-        // reveal the rebuild underneath (handle tracks the seam). Caption 05.
+        // BEAT 4 (0.64 -> 0.72): GOOGLE LISTING, HANDLED. A Y-flip reveals
+        // the designed Google-Business mock. Caption 04.
         // ============================================================
-        capOut("04", 0.68);
-        tl.to(f.google!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.68);
-        tl.to(f.wipe!, { autoAlpha: 1, ease: E, duration: 0.04 }, 0.69);
-        capIn("05", 0.72);
-        if (wipeHandle) tl.set(wipeHandle, { autoAlpha: 1 }, 0.7);
-        // wipe the BEFORE layer away (clip from the right), handle follows seam
+        tl.set(f.gallery!, { autoAlpha: 1 }, 0.6); // restore desktop bg under flip
+        tl.to(device, { rotateY: 90, ease: "power2.in", duration: 0.04 }, 0.64);
+        tl.set(f.gallery!, { autoAlpha: 0 }, 0.68);
+        tl.set(f.google!, { autoAlpha: 1 }, 0.68);
+        scanSweep(0.68);
+        tl.to(device, { rotateY: 0, ease: "power2.out", duration: 0.05 }, 0.68);
+        tl.call(() => setHud("LOCAL SEO", "INDEXED"), [], 0.67);
+        capIn("04", 0.7);
+
+        // ============================================================
+        // BEAT 5 (0.72 -> 0.86): REAL BEFORE & AFTERS. The old template wipes
+        // left-to-right to reveal the rebuild (handle tracks seam). Caption 05.
+        // ============================================================
+        capOut("04", 0.76);
+        tl.to(f.google!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.76);
+        tl.to(f.wipe!, { autoAlpha: 1, ease: E, duration: 0.04 }, 0.77);
+        tl.call(() => setHud("REBUILD", "LIVE"), [], 0.76);
+        capIn("05", 0.8);
+        if (wipeHandle) tl.set(wipeHandle, { autoAlpha: 1 }, 0.78);
         if (wipeBefore)
           tl.fromTo(
             wipeBefore,
             { clipPath: "inset(0 0% 0 0)" },
-            { clipPath: "inset(0 100% 0 0)", ease: E, duration: 0.13 },
-            0.72
+            { clipPath: "inset(0 100% 0 0)", ease: E, duration: 0.1 },
+            0.8
           );
         if (wipeHandle)
-          tl.fromTo(
-            wipeHandle,
-            { left: "100%" },
-            { left: "0%", ease: E, duration: 0.13 },
-            0.72
-          );
-        if (wipeHandle) tl.to(wipeHandle, { autoAlpha: 0, duration: 0.03 }, 0.85);
+          tl.fromTo(wipeHandle, { x: seamW() }, { x: 0, ease: E, duration: 0.1 }, 0.8);
+        if (wipeHandle) tl.to(wipeHandle, { autoAlpha: 0, duration: 0.03 }, 0.9);
 
         // ============================================================
-        // BEAT 6 (0.86 -> 1.00): ONE PERSON. Quiet close — the screen
-        // settles to the Slate & Co. wordmark with a confident push-in.
+        // BEAT 6 (0.88 -> 1.00): ONE PERSON. Quiet close — the screen settles
+        // to the Slate & Co. wordmark with a confident push-in; HUD dims out.
         // Caption 06.
         // ============================================================
-        capOut("05", 0.86);
-        tl.to(f.wipe!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.86);
+        capOut("05", 0.9);
+        tl.to(f.wipe!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.9);
         if (closing)
-          tl.to(closing, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.87);
-        capIn("06", 0.9);
-        tl.to(device, { scale: 1.02, ease: "power1.out", duration: 0.06 }, 0.9);
+          tl.to(closing, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.91);
+        tl.call(() => setHud("STUDIO", "SLATE"), [], 0.9);
+        capIn("06", 0.93);
+        tl.to(device, { scale: 1.02, ease: "power1.out", duration: 0.06 }, 0.93);
+        if (reticle) tl.to(reticle, { autoAlpha: 0.55, ease: "power1.out", duration: 0.05 }, 0.95);
+        if (hud) tl.to(hud, { autoAlpha: 0.5, ease: "power1.out", duration: 0.05 }, 0.95);
       }, section!);
 
       teardown = () => {
-        ctx.revert(); // kills timeline + ScrollTrigger, restores inline styles
+        ctx.revert();
         section!.classList.remove("is-live");
         built = false;
         teardown = null;
@@ -531,11 +588,10 @@ const features = [
     }
 
     function maybeBuild() {
-      if (reduce.matches) return; // settled end-state via CSS; no JS motion
+      if (reduce.matches) return;
       build();
     }
 
-    // Load slightly before the section scrolls into view.
     if ("IntersectionObserver" in window) {
       const io = new IntersectionObserver(
         (entries) => {
@@ -546,14 +602,15 @@ const features = [
             }
           }
         },
-        { rootMargin: "500px 0px 500px 0px" }
+        // load a little before the section enters view, but not so early that
+        // it competes with the hero/LCP on first paint.
+        { rootMargin: "300px 0px 300px 0px" }
       );
       io.observe(section);
     } else {
       maybeBuild();
     }
 
-    // If reduced-motion flips on while built, tear down to settled state.
     reduce.addEventListener("change", () => {
       if (reduce.matches && teardown) teardown();
     });
@@ -570,34 +627,53 @@ const features = [
 <style>
   /* =====================================================================
      STATIC / FALLBACK (default, no-JS, settled). The laptop shows the
-     CLOSING wordmark frame; the six features render in a legible grid
-     below it. Nothing is hidden behind the animation.
+     CLOSING wordmark; the six features render in a legible grid below.
+     Nothing is hidden behind the animation.
      ===================================================================== */
+  /* Typed custom property so the laptop->phone morph value interpolates
+     smoothly (GSAP tweens it numerically; @property guarantees the type). */
+  @property --morph {
+    syntax: "<number>";
+    inherits: true; /* the screen (child of the bezel) reads the morph value */
+    initial-value: 0;
+  }
+
   .showcase {
     position: relative;
-    background: var(--paper-2);
+    background: var(--bg-2);
     border-block: 1px solid var(--hairline);
     overflow: clip;
   }
 
-  /* TRACK: by default (no-JS / reduced-motion) it is just a normal block and
-     the content flows at natural height. When scripting + motion are available
-     (`.js-motion`, set before first paint), it reserves a tall scroll track so
-     the sticky pin has travel — reserved in the INITIAL layout, so the later
-     GSAP build inserts no spacer and shifts nothing below (CLS = 0). */
+  /* A faint cyan signal-line under the section's top edge — tech frame. */
+  .showcase::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    z-index: 1;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--accent-dim) 50%,
+      transparent
+    );
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
   .showcase__track {
     position: relative;
   }
   :global(.js-motion) .showcase__track {
-    /* travel = track height - one sticky viewport. ~5 screens of scrub. */
-    height: 600vh;
+    /* travel = track height - one sticky viewport. ~6 screens of scrub. */
+    height: 660vh;
   }
 
   .showcase__pin {
+    position: relative;
     padding-block: var(--section-y);
   }
-  /* When motion is on, the inner viewport STICKS for the whole track — this is
-     the pin, done in pure CSS (works even before/without GSAP). */
   :global(.js-motion) .showcase__pin {
     position: sticky;
     top: 0;
@@ -609,7 +685,64 @@ const features = [
     overflow: clip;
   }
 
+  /* ---- Cyber HUD backdrop (grid + scan glow), behind the device ---- */
+  .hud {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    display: none; /* painted only once live (no static cost) */
+  }
+  .showcase.is-live .hud {
+    display: block;
+    opacity: 0; /* GSAP drives autoAlpha */
+  }
+  .hud__grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--hairline) 70%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--hairline) 70%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 56px 56px;
+    /* fade the grid out toward the edges so it frames, not boxes, the device */
+    mask-image: radial-gradient(
+      120% 90% at 50% 45%,
+      #000 0%,
+      transparent 72%
+    );
+    -webkit-mask-image: radial-gradient(
+      120% 90% at 50% 45%,
+      #000 0%,
+      transparent 72%
+    );
+    opacity: 0.6;
+  }
+  .hud__scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 38%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--accent-glow) 60%,
+      color-mix(in srgb, var(--accent) 22%, transparent) 100%
+    );
+    mix-blend-mode: screen;
+    filter: blur(2px);
+  }
+
   .showcase__inner {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -617,74 +750,206 @@ const features = [
   }
 
   .showcase__head {
-    max-width: 40ch;
+    max-width: 42ch;
     text-align: center;
   }
 
   .showcase__headline {
-    margin-top: var(--space-16);
-    font-size: var(--fs-h2);
+    margin-top: var(--space-12);
+    /* slightly smaller than the global h2 so the centered device + caption all
+       clear within a single pinned viewport (no clipping). */
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.25rem);
     letter-spacing: var(--tracking-h2);
   }
 
   .showcase__scrollhint {
     margin-top: var(--space-16);
-    font-family: var(--font-body);
+    font-family: var(--font-mono);
     font-size: var(--fs-eyebrow);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
-    color: var(--ink-3);
-    opacity: 0; /* only meaningful once live */
+    color: var(--accent-dim);
+    opacity: 0;
   }
 
-  /* ---- Stage: device centered, caption beside it ---- */
+  /* ---- Stage: device CENTERED, caption room reserved BELOW ---- */
   .showcase__stage {
-    position: relative; /* caption anchors here */
+    position: relative;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    /* top margin clears the headline above (the 3D tilt lifts the device's
+       visual top edge, so we leave a little extra room). */
+    margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
   }
 
   .showcase__device {
     position: relative;
     isolation: isolate;
-    width: min(100%, 880px);
-    perspective: 1600px; /* parent owns perspective so child rotate reads 3D */
+    /* sized so that, even at scale 1, the device + headline above + caption
+       below all fit a 100vh pin without clipping. */
+    width: min(90%, 620px);
+    perspective: 1600px;
+    transform-style: preserve-3d;
     will-change: transform;
   }
 
   .showcase__glow {
     position: absolute;
-    inset: -16% -10% -22%;
+    inset: -18% -12% -24%;
     z-index: -1;
     background: radial-gradient(
-        58% 52% at 64% 30%,
-        var(--accent-tint) 0%,
+        58% 52% at 60% 32%,
+        var(--accent-glow) 0%,
         transparent 70%
       ),
       radial-gradient(
-        46% 48% at 28% 80%,
-        color-mix(in srgb, var(--accent-tint) 55%, transparent) 0%,
+        46% 48% at 30% 82%,
+        color-mix(in srgb, var(--accent-glow) 70%, transparent) 0%,
         transparent 70%
       );
-    filter: blur(10px);
+    filter: blur(14px);
   }
 
-  /* ---- Laptop ---- */
+  /* ---- Corner reticle / HUD label around the device ---- */
+  .reticle {
+    position: absolute;
+    inset: -7% -5%;
+    z-index: 8;
+    pointer-events: none;
+    display: none;
+  }
+  .showcase.is-live .reticle {
+    display: block;
+    opacity: 0;
+  }
+  .reticle__c {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--accent-dim);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 4px var(--accent-glow));
+  }
+  .reticle__c--tl {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+  .reticle__c--tr {
+    top: 0;
+    right: 0;
+    border-left: 0;
+    border-bottom: 0;
+  }
+  .reticle__c--bl {
+    bottom: 0;
+    left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+  .reticle__c--br {
+    bottom: 0;
+    right: 0;
+    border-left: 0;
+    border-top: 0;
+  }
+  /* connector line from the top-right corner toward the HUD label */
+  .reticle__line {
+    position: absolute;
+    top: 0;
+    right: 22px;
+    width: clamp(40px, 8vw, 96px);
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--accent-dim)
+    );
+    opacity: 0.55;
+  }
+  .hudlabel {
+    position: absolute;
+    top: -1.1em;
+    right: calc(22px + clamp(40px, 8vw, 96px));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.32em 0.7em;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    backdrop-filter: blur(4px);
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.72rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 0 18px -6px var(--accent-glow);
+  }
+  .hudlabel__dot {
+    width: 0.45em;
+    height: 0.45em;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .hudlabel__k {
+    color: var(--ink-3);
+  }
+  .hudlabel__v {
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  /* on narrow screens the label would crowd the device — drop it */
+  @media (max-width: 700px) {
+    .reticle__line,
+    .hudlabel {
+      display: none;
+    }
+  }
+
+  /* ---- Laptop / device frame (morphs to phone via --morph) ---- */
   .laptop {
     margin: 0;
     transform-style: preserve-3d;
   }
 
+  /* --morph: 0 = laptop, 1 = phone. CRITICAL: the bezel's FLOW BOX stays a
+     FIXED full-width laptop rectangle (so nothing ever reflows -> CLS = 0). The
+     laptop -> phone shape change is delivered purely by CLIP-PATH (paint-only,
+     never a layout shift): the wide rectangle is squeezed to a centered phone
+     column with rounded corners as --morph -> 1. */
   .laptop__bezel {
+    --morph: 0;
+    /* clip insets: at morph 1, carve left/right to ~34.5% each -> ~31% column;
+       corner radius grows. Paint-only; zero layout impact. */
+    --bz-inset-x: calc(34.5% * var(--morph));
+    --bz-radius: calc(20px + 22px * var(--morph));
     position: relative;
+    width: 100%;
+    margin-inline: auto;
     border-radius: 20px;
     padding: 12px;
-    background: linear-gradient(160deg, #2c2c30, #161618);
-    box-shadow: var(--shadow-3);
+    background: linear-gradient(160deg, #20262f, #0e131a);
+    box-shadow: var(--shadow-3),
+      0 0 calc(40px * var(--morph)) -8px var(--accent-glow);
+    clip-path: inset(
+      0 var(--bz-inset-x) 0 var(--bz-inset-x) round var(--bz-radius)
+    );
+    will-change: clip-path;
+  }
+  /* hairline accent edge — drawn INSIDE the clip so it follows the phone column */
+  .laptop__bezel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--hairline-strong) 80%, transparent);
+    pointer-events: none;
   }
 
   .laptop__cam {
@@ -695,15 +960,32 @@ const features = [
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #3a3a40;
+    background: #2a2f38;
     z-index: 4;
+    opacity: calc(1 - var(--morph)); /* fades as it becomes a phone */
+  }
+  /* phone notch — fades in via GSAP autoAlpha at the morph beat */
+  .laptop__notch {
+    position: absolute;
+    z-index: 5;
+    top: calc(2px + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34%;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: #05080c;
   }
 
   .laptop__screen {
     position: relative;
     overflow: hidden;
-    border-radius: 9px;
-    background: var(--paper);
+    border-radius: calc(9px + 18px * var(--morph));
+    background: var(--bg);
+    /* FIXED 16:10 flow box (never changes -> zero reflow / zero CLS). The phone
+       shape is delivered by clip-path on the BEZEL (paint-only) carving a
+       centered column; the mobile screenshot is shown as a centered portrait
+       column that lands exactly inside that clip window. */
     aspect-ratio: 16 / 10;
     isolation: isolate;
   }
@@ -714,7 +996,6 @@ const features = [
     inset: 0;
     z-index: 1;
   }
-
   .frame__img {
     width: 100%;
     height: 100%;
@@ -722,36 +1003,49 @@ const features = [
     object-position: top center;
     display: block;
   }
-
-  /* hero pan layer is slightly oversized so panning never shows an edge */
   .frame__img--pan {
     transform-origin: center top;
   }
+  /* The mobile frame paints a DARK phone field; the real mobile screenshot is a
+     centered portrait column (full screen height, width = height x ~0.462) that
+     lands inside the bezel's clip column — so the whole mobile page shows as a
+     real phone. Absolute-centered for bulletproof alignment. */
+  .frame--mobile {
+    background: var(--bg);
+  }
+  .frame__img--mobile {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    width: auto;
+    aspect-ratio: 390 / 844;
+    object-fit: cover;
+    object-position: top center;
+  }
 
-  /* In the static / no-JS end-state only the CLOSING wordmark shows in the
-     screen. The demo-only layers (screenshot frames, the Google mock, the
-     before/after wipe, the cascade sheens, the phone) are display:none so they
-     are NOT painted and contribute ZERO layout shift on initial load. They are
-     revealed to GSAP only at `is-live` — which fires AFTER fonts/LCP settle —
-     so revealing them shifts nothing on the page (they're absolute inside the
-     fixed-size screen). */
+  /* In the static / no-JS end-state only the CLOSING wordmark shows. The
+     demo-only layers are display:none so they paint nothing and add ZERO
+     layout shift on load. Revealed to GSAP only at is-live (after LCP). */
   .frame,
-  .phone,
   .speedcue,
   .cascade__row,
-  .wipe__handle {
+  .wipe__handle,
+  .laptop__notch,
+  .screen__scanline {
     display: none;
   }
   .showcase.is-live .frame,
-  .showcase.is-live .phone,
   .showcase.is-live .speedcue,
   .showcase.is-live .cascade__row,
-  .showcase.is-live .wipe__handle {
+  .showcase.is-live .wipe__handle,
+  .showcase.is-live .laptop__notch,
+  .showcase.is-live .screen__scanline {
     display: block;
-    opacity: 0; /* hand control to GSAP's autoAlpha */
+    opacity: 0;
   }
-  /* The closing frame is the static end-state, so it stays displayed; its
-     opacity is handed to GSAP only once live (revealed on the final beat). */
   .closing {
     display: grid;
   }
@@ -765,20 +1059,14 @@ const features = [
     z-index: 2;
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--paper) 92%, transparent) 0%,
-      color-mix(in srgb, var(--paper) 40%, transparent) 100%
+      color-mix(in srgb, var(--bg) 92%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 30%, transparent) 100%
     );
     pointer-events: none;
   }
-  .cascade__row:nth-of-type(1) {
-    top: 0;
-  }
-  .cascade__row:nth-of-type(2) {
-    top: 33.33%;
-  }
-  .cascade__row:nth-of-type(3) {
-    top: 66.66%;
-  }
+  .cascade__row:nth-of-type(1) { top: 0; }
+  .cascade__row:nth-of-type(2) { top: 33.33%; }
+  .cascade__row:nth-of-type(3) { top: 66.66%; }
 
   .speedcue {
     position: absolute;
@@ -790,26 +1078,26 @@ const features = [
     gap: var(--space-8);
     padding: 0.35em 0.7em;
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--ink) 88%, transparent);
-    color: var(--paper);
-    font-family: var(--font-body);
+    border: 1px solid var(--hairline-strong);
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    color: var(--ink);
+    font-family: var(--font-mono);
     font-size: clamp(0.7rem, 0.6rem + 0.4vw, 0.9rem);
     font-weight: 600;
-    font-feature-settings: "tnum";
-    letter-spacing: 0.01em;
-    box-shadow: var(--shadow-2);
+    letter-spacing: 0.03em;
+    box-shadow: 0 0 18px -6px var(--accent-glow);
   }
   .speedcue__dot {
     width: 0.5em;
     height: 0.5em;
     border-radius: 50%;
-    background: #5bbf7b;
-    box-shadow: 0 0 0 3px color-mix(in srgb, #5bbf7b 35%, transparent);
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
-  /* ---- Beat 4: designed Google-Business listing mock ---- */
+  /* ---- Beat 4: designed Google-Business listing mock (dark-skinned) ---- */
   .frame--google {
-    background: var(--paper);
+    background: var(--panel);
   }
   .gbiz {
     position: absolute;
@@ -825,18 +1113,18 @@ const features = [
     min-width: 0;
   }
   .gbiz__kicker {
-    font-family: var(--font-body);
-    font-size: clamp(0.6rem, 0.5rem + 0.4vw, 0.8rem);
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 0.5rem + 0.4vw, 0.78rem);
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-3);
   }
   .gbiz__name {
-    margin-top: 0.15em;
+    margin-top: 0.2em;
     font-family: var(--font-display);
     font-size: clamp(1.1rem, 0.7rem + 1.9vw, 2rem);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.05;
     letter-spacing: var(--tracking-h3);
     color: var(--ink);
@@ -855,12 +1143,12 @@ const features = [
   }
   .gbiz__stars {
     display: inline-flex;
-    color: #e8a531;
+    color: #e8b341;
     letter-spacing: -0.02em;
     font-size: 0.95em;
   }
   .gbiz__stars .is-half {
-    color: color-mix(in srgb, #e8a531 45%, var(--hairline));
+    color: color-mix(in srgb, #e8b341 45%, var(--hairline-strong));
   }
   .gbiz__count {
     color: var(--ink-3);
@@ -880,7 +1168,7 @@ const features = [
     gap: 0.55em;
   }
   .gbiz__rows strong {
-    color: #2c8a4a;
+    color: var(--accent-text);
     font-weight: 600;
   }
   .gbiz__ico {
@@ -893,7 +1181,7 @@ const features = [
   }
   .gbiz__ico[data-ico="open"] {
     border-radius: 50%;
-    background: color-mix(in srgb, #2c8a4a 22%, transparent);
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
   }
   .gbiz__ico[data-ico="pin"] {
     background: var(--accent);
@@ -903,7 +1191,7 @@ const features = [
     height: 0.7em;
   }
   .gbiz__ico[data-ico="phone"] {
-    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
   }
   .gbiz__chips {
     margin-top: 0.85em;
@@ -912,12 +1200,12 @@ const features = [
     gap: 0.45em;
   }
   .gbiz__chip {
-    font-family: var(--font-body);
-    font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.78rem);
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.76rem);
     font-weight: 600;
     padding: 0.4em 0.85em;
     border-radius: var(--radius-pill);
-    border: 1px solid var(--hairline);
+    border: 1px solid var(--hairline-strong);
     color: var(--ink-2);
   }
   .gbiz__chip--accent {
@@ -930,15 +1218,14 @@ const features = [
     border-radius: var(--radius-md);
     overflow: hidden;
     background:
-      radial-gradient(120% 90% at 80% 10%, #e9efe6 0%, transparent 60%),
-      linear-gradient(160deg, #eef1ec 0%, #e4e9e2 100%);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+      radial-gradient(120% 90% at 80% 10%, #16202b 0%, transparent 60%),
+      linear-gradient(160deg, #121a24 0%, #0d141d 100%);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
     min-height: 6rem;
   }
   .gbiz__road {
     position: absolute;
-    background: #fff;
-    box-shadow: 0 0 0 1px #dfe4dc;
+    background: var(--hairline-strong);
   }
   .gbiz__road--a {
     top: 38%;
@@ -960,7 +1247,7 @@ const features = [
     width: 80%;
     height: 5%;
     transform: rotate(4deg);
-    background: #f4f6f2;
+    background: color-mix(in srgb, var(--hairline-strong) 60%, transparent);
   }
   .gbiz__marker {
     position: absolute;
@@ -971,13 +1258,13 @@ const features = [
     background: var(--accent);
     border-radius: 50% 50% 50% 0;
     transform: translate(-50%, -100%) rotate(-45deg);
-    box-shadow: var(--shadow-2);
+    box-shadow: 0 0 16px -2px var(--accent-glow);
   }
   .gbiz__marker::after {
     content: "";
     position: absolute;
     inset: 28%;
-    background: var(--paper);
+    background: var(--bg);
     border-radius: 50%;
   }
 
@@ -992,11 +1279,14 @@ const features = [
     position: absolute;
     top: 0;
     bottom: 0;
+    left: 0;
     z-index: 3;
     width: 2px;
     margin-left: -1px;
-    background: var(--paper);
-    box-shadow: 0 0 0 1px hsl(28 30% 12% / 0.15);
+    background: var(--accent);
+    box-shadow: 0 0 12px 0 var(--accent-glow);
+    /* positioned via transform (translateX) only -> never a layout shift */
+    will-change: transform;
   }
   .wipe__handle::after {
     content: "";
@@ -1007,74 +1297,32 @@ const features = [
     height: 1.6em;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    background: var(--paper);
-    box-shadow: var(--shadow-2);
+    background: var(--panel);
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 0 16px -2px var(--accent-glow);
   }
   .wipe__tag {
     position: absolute;
     z-index: 4;
     bottom: 6%;
     left: 5%;
-    font-family: var(--font-body);
+    font-family: var(--font-mono);
     font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.78rem);
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 0.3em 0.7em;
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--ink) 82%, transparent);
-    color: var(--paper);
+    background: color-mix(in srgb, var(--panel) 90%, transparent);
+    border: 1px solid var(--hairline-strong);
+    color: var(--ink);
   }
   .wipe__tag--after {
     left: auto;
     right: 5%;
     background: var(--accent);
-  }
-
-  /* ---- Phone (morph target) ---- */
-  .phone {
-    position: absolute;
-    inset: 0;
-    z-index: 6;
-    margin: 0;
-    place-items: center;
-    pointer-events: none;
-    /* NOTE: `display` is intentionally controlled by the shared hide rule
-       above (.frame/.phone { display:none }) and the is-live reveal, so the
-       phone is NOT painted in the static / no-JS end-state. */
-  }
-  .showcase.is-live .phone {
-    display: grid; /* reveal as a centered grid only once GSAP drives it */
-  }
-  .phone__screen {
-    position: relative;
-    height: 86%;
-    aspect-ratio: 390 / 844;
-    border-radius: clamp(18px, 2.4vw, 30px);
-    padding: 6px;
-    background: linear-gradient(160deg, #2c2c30, #161618);
-    box-shadow: var(--shadow-3);
-    overflow: hidden;
-  }
-  .phone__notch {
-    position: absolute;
-    z-index: 2;
-    top: 7%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 26%;
-    height: 1.4%;
-    min-height: 5px;
-    border-radius: var(--radius-pill);
-    background: #0c0c0e;
-  }
-  .phone__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    border-radius: clamp(13px, 2vw, 24px);
-    display: block;
+    border-color: var(--accent);
+    color: var(--accent-on);
   }
 
   /* ---- Closing wordmark frame (= static settled end-state) ---- */
@@ -1088,11 +1336,11 @@ const features = [
     gap: var(--space-12);
     padding: var(--space-32);
     background: radial-gradient(
-        70% 80% at 50% 30%,
-        var(--accent-tint) 0%,
+        70% 80% at 50% 32%,
+        var(--accent-glow) 0%,
         transparent 75%
       ),
-      var(--paper);
+      linear-gradient(160deg, var(--panel) 0%, var(--bg) 100%);
   }
   .closing__mark {
     font-family: var(--font-display);
@@ -1102,9 +1350,10 @@ const features = [
     color: var(--ink);
   }
   .closing__line {
-    font-family: var(--font-body);
+    font-family: var(--font-mono);
     font-size: var(--fs-small);
-    color: var(--ink-2);
+    letter-spacing: 0.02em;
+    color: var(--accent-dim);
   }
 
   .screen__vignette {
@@ -1112,18 +1361,37 @@ const features = [
     z-index: 5;
     inset: 0;
     pointer-events: none;
-    box-shadow: inset 0 0 40px hsl(28 30% 12% / 0.1);
-    border-radius: 9px;
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.45);
+    border-radius: inherit;
+  }
+  /* a thin cyan scanline that sweeps the screen on beat changes */
+  .screen__scanline {
+    position: absolute;
+    z-index: 6;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 16%;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--accent-glow) 70%,
+      color-mix(in srgb, var(--accent) 35%, transparent) 100%
+    );
+    mix-blend-mode: screen;
   }
 
-  /* ---- Laptop base ---- */
+  /* ---- Laptop base — folds away during the phone morph ---- */
   .laptop__base {
     position: relative;
     height: 15px;
-    margin: 0 -3.4%;
+    width: 107%;
+    margin-inline: auto;
     border-bottom-left-radius: 11px;
     border-bottom-right-radius: 11px;
-    background: linear-gradient(180deg, #c9c8c4, #a7a6a1 60%, #87867f);
+    background: linear-gradient(180deg, #3a4150, #232a34 60%, #161b22);
+    transform-origin: 50% 0;
   }
   .laptop__hinge {
     position: absolute;
@@ -1134,67 +1402,73 @@ const features = [
     height: 6px;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
-    background: #8b8a84;
+    background: #2c333d;
   }
 
-  /* ---- Small per-beat caption: sits just BELOW the device, centered,
-     small and subtle. Never covers the laptop, never clips at the edge.
-     ABSOLUTELY positioned in a reserved gap so it is OUT of normal flow and
-     can never shift the content below it (zero CLS). ---- */
-  .showcase__capspace {
-    /* reserves the vertical room the caption occupies, in flow. Only present
-       when the demo runs; collapsed otherwise so the static layout is compact
-       and nothing shifts. */
+  /* ---- Caption: reserved room BELOW the device; ALWAYS fully visible ---- */
+  .showcase__capwrap {
     width: 100%;
+    /* reserve room in flow so the caption never overlaps the credit and is
+       never clipped by the pin's bottom. Present only when the demo runs. */
     height: 0;
+    margin-top: 0;
   }
-  :global(.js-motion) .showcase__capspace {
-    height: clamp(3rem, 2.4rem + 1.5vw, 4.25rem);
+  :global(.js-motion) .showcase__capwrap {
+    height: clamp(4.5rem, 3.5rem + 3vw, 6.5rem);
+    margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
   }
   .showcase__caption {
-    position: absolute;
-    z-index: 7;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%);
+    position: relative;
     width: 100%;
-    height: clamp(3rem, 2.4rem + 1.5vw, 4.25rem);
+    height: 100%;
     display: none;
-    place-items: center;
+    place-items: start center;
     pointer-events: none;
   }
   .showcase.is-live .showcase__caption {
     display: grid;
   }
   .cap {
-    grid-area: 1 / 1; /* stack all captions in one cell; GSAP fades between */
+    grid-area: 1 / 1; /* stack all captions; GSAP fades between them */
     margin: 0;
     display: grid;
-    gap: 0.25em;
+    gap: 0.4em;
     justify-items: center;
-    align-content: center;
+    align-content: start;
     text-align: center;
-    max-width: 34ch;
+    max-width: 38ch;
     padding-inline: var(--gutter);
     opacity: 0;
   }
   .cap__kicker {
-    font-family: var(--font-body);
-    font-size: var(--fs-eyebrow);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
     font-weight: 600;
-    letter-spacing: var(--tracking-eyebrow);
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--accent-text);
+  }
+  .cap__n {
+    font-size: 0.8em;
+    color: var(--ink-3);
+    padding: 0.15em 0.5em;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-sm);
   }
   .cap__line {
-    font-size: var(--fs-small);
-    line-height: 1.45;
+    font-size: var(--fs-body);
+    line-height: 1.5;
     color: var(--ink-2);
   }
 
   .showcase__credit {
     margin-top: var(--space-48);
+    font-family: var(--font-mono);
     font-size: var(--fs-small);
+    letter-spacing: 0.02em;
     color: var(--ink-3);
     text-align: center;
   }
@@ -1214,8 +1488,6 @@ const features = [
     gap: var(--space-24) var(--space-48);
     grid-template-columns: 1fr;
   }
-  /* When motion is available the demo replaces the list — hidden BEFORE first
-     paint (via .js-motion) so removing it never shifts the page (CLS = 0). */
   :global(.js-motion) .showcase__list {
     display: none;
   }
@@ -1237,11 +1509,10 @@ const features = [
   }
   .svc__num {
     flex: none;
-    font-family: var(--font-display);
+    font-family: var(--font-mono);
     font-size: var(--fs-small);
     font-weight: 600;
-    color: var(--accent);
-    font-feature-settings: "tnum";
+    color: var(--accent-dim);
     padding-top: 2px;
     min-width: 2ch;
   }
@@ -1262,24 +1533,20 @@ const features = [
   }
 
   /* =====================================================================
-     LIVE STATE: GSAP loaded. It drives transform/opacity/clip inline. The
-     redundant static list is hidden (the screen now plays the demo), and
-     the closing frame's default opacity is handed to GSAP.
+     LIVE STATE: GSAP loaded.
      ===================================================================== */
   .showcase.is-live .showcase__scrollhint {
     opacity: 1;
   }
   .showcase.is-live .closing {
-    opacity: 0; /* GSAP reveals it on the final beat */
+    opacity: 0;
   }
   .showcase.is-live .showcase__device {
     will-change: transform;
   }
 
   /* =====================================================================
-     REDUCED MOTION: settled end-state, no scrub. The JS island bails
-     before building, so static styles already apply; this guarantees the
-     device sits flat and the feature list stays visible.
+     REDUCED MOTION: settled end-state, no scrub.
      ===================================================================== */
   @media (prefers-reduced-motion: reduce) {
     .showcase__device {

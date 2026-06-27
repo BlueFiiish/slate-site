@@ -81,8 +81,9 @@ const {
     width: 100%;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--paper-2);
-    box-shadow: var(--shadow-3);
+    background: var(--panel);
+    box-shadow: var(--shadow-3), var(--glow-cta);
+    border: 1px solid var(--hairline-strong);
     /* Reserve space to prevent CLS; both images share this ratio. */
     aspect-ratio: 16 / 10;
     isolation: isolate;
@@ -110,8 +111,9 @@ const {
   .compare__tag {
     position: absolute;
     top: var(--space-16);
+    font-family: var(--font-mono);
     font-size: var(--fs-eyebrow);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
     padding: 6px var(--space-12);
@@ -122,13 +124,13 @@ const {
 
   .compare__tag--before {
     left: var(--space-16);
-    background: color-mix(in srgb, var(--ink) 78%, transparent);
-    color: var(--paper);
+    background: color-mix(in srgb, #0b0e14 72%, transparent);
+    color: #f4f7fb;
   }
 
   .compare__tag--after {
     right: var(--space-16);
-    background: color-mix(in srgb, var(--accent) 90%, transparent);
+    background: color-mix(in srgb, var(--accent) 92%, transparent);
     color: var(--accent-on);
   }
 
@@ -150,8 +152,8 @@ const {
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--paper);
-    box-shadow: 0 0 0 1px hsl(28 30% 12% / 0.18);
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow), 0 0 0 1px rgba(0, 0, 0, 0.15);
   }
 
   .compare__grip {
@@ -160,9 +162,10 @@ const {
     width: 44px;
     height: 44px;
     border-radius: var(--radius-pill);
-    background: var(--paper);
-    color: var(--ink);
-    box-shadow: var(--shadow-2);
+    background: #0f141c;
+    border: 1px solid var(--accent);
+    color: var(--accent-text);
+    box-shadow: var(--shadow-2), var(--glow-cta);
   }
 
   /* The range input sits on top, invisible, and drives everything.

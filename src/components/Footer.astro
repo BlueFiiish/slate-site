@@ -38,7 +38,7 @@ const year = new Date().getFullYear();
 
 <style>
   .footer {
-    background: var(--paper-2);
+    background: var(--bg);
     border-top: 1px solid var(--hairline);
     padding-top: var(--section-y-tight);
   }
@@ -72,9 +72,12 @@ const year = new Date().getFullYear();
     width: 34px;
     height: 34px;
     border-radius: var(--radius-sm);
-    background: var(--ink);
-    color: var(--paper);
-    font-size: 1.0625rem;
+    background: var(--panel);
+    border: 1px solid var(--hairline-strong);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 600;
   }
 
   .footer__tagline {
@@ -96,8 +99,9 @@ const year = new Date().getFullYear();
   }
 
   .footer__nav-title {
+    font-family: var(--font-mono);
     font-size: var(--fs-eyebrow);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -127,7 +131,9 @@ const year = new Date().getFullYear();
     gap: var(--space-16);
     justify-content: space-between;
     align-items: center;
-    font-size: var(--fs-small);
+    font-family: var(--font-mono);
+    font-size: var(--fs-eyebrow);
+    letter-spacing: 0.02em;
     color: var(--ink-3);
   }
 

@@ -57,23 +57,23 @@ const steps = [
         <div class="specimen__type">
           <span class="specimen__aa">Aa</span>
           <div class="specimen__type-meta">
-            <p class="specimen__type-name">Fraunces &amp; Inter Tight</p>
-            <p class="specimen__type-desc">An editorial serif, set tight, on a clean workhorse sans.</p>
+            <p class="specimen__type-name">Space Grotesk &amp; Inter Tight</p>
+            <p class="specimen__type-desc">A geometric display face on a clean, readable sans &mdash; with JetBrains Mono for the technical labels.</p>
           </div>
         </div>
 
         <div class="specimen__scale" aria-hidden="true">
           <span style="font-size:2rem">Display</span>
           <span style="font-size:1.375rem">Heading</span>
-          <span style="font-size:1.0625rem">Body copy, set at a comfortable measure.</span>
-          <span style="font-size:0.8125rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent)">Eyebrow</span>
+          <span class="specimen__scale-body" style="font-size:1.0625rem">Body copy, set at a comfortable measure.</span>
+          <span class="specimen__scale-mono" style="font-size:0.8125rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-dim)">// Mono label</span>
         </div>
 
         <div class="specimen__swatches">
-          <span class="swatch" style="--c: var(--paper)"><em>Paper</em></span>
-          <span class="swatch" style="--c: var(--ink); color: var(--paper)"><em>Ink</em></span>
-          <span class="swatch" style="--c: var(--accent); color: var(--paper)"><em>Accent</em></span>
-          <span class="swatch" style="--c: var(--night); color: var(--paper)"><em>Night</em></span>
+          <span class="swatch" style="--c: var(--bg)"><em>Base</em></span>
+          <span class="swatch" style="--c: var(--panel)"><em>Panel</em></span>
+          <span class="swatch" style="--c: var(--accent); color: var(--accent-on)"><em>Signal</em></span>
+          <span class="swatch swatch--violet" style="--c: var(--violet); color: var(--accent-on)"><em>Streak</em></span>
         </div>
       </aside>
     </div>
@@ -92,6 +92,7 @@ const steps = [
   .process__body {
     margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2.5rem, 1rem + 5vw, 5rem);
   }
 
@@ -108,6 +109,13 @@ const steps = [
     display: grid;
     gap: var(--space-48);
     padding-left: var(--space-8);
+    min-width: 0;
+  }
+
+  @media (max-width: 400px) {
+    .process__steps {
+      padding-left: 0;
+    }
   }
 
   .process__line {
@@ -152,9 +160,15 @@ const steps = [
   .process__step {
     position: relative;
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: var(--space-24);
     align-items: start;
+  }
+
+  @media (max-width: 400px) {
+    .process__step {
+      gap: var(--space-16);
+    }
   }
 
   .process__dot {
@@ -163,12 +177,12 @@ const steps = [
     width: 2.8rem;
     height: 2.8rem;
     border-radius: var(--radius-pill);
-    background: var(--paper);
-    border: 1px solid var(--hairline);
-    font-family: var(--font-display);
+    background: var(--panel);
+    border: 1px solid var(--hairline-strong);
+    font-family: var(--font-mono);
     font-size: var(--fs-small);
-    font-weight: 600;
-    color: var(--ink-2);
+    font-weight: 500;
+    color: var(--accent-dim);
     font-feature-settings: "tnum";
     z-index: 1;
   }
@@ -189,7 +203,8 @@ const steps = [
     border: 1px solid var(--hairline);
     border-radius: var(--radius-lg);
     padding: var(--space-32);
-    background: var(--paper-2);
+    background: var(--panel);
+    box-shadow: var(--shadow-2);
   }
 
   @media (min-width: 1024px) {
@@ -242,10 +257,15 @@ const steps = [
     color: var(--ink);
   }
 
-  .specimen__scale > span:nth-child(3) {
-    font-family: var(--font-body);
-    font-weight: 400;
-    color: var(--ink-2);
+  .specimen__scale-body {
+    font-family: var(--font-body) !important;
+    font-weight: 400 !important;
+    color: var(--ink-2) !important;
+  }
+
+  .specimen__scale-mono {
+    font-family: var(--font-mono);
+    font-weight: 500;
   }
 
   .specimen__swatches {
@@ -262,14 +282,23 @@ const steps = [
     padding: var(--space-8);
     border-radius: var(--radius-sm);
     background: var(--c);
-    border: 1px solid var(--hairline);
+    border: 1px solid var(--hairline-strong);
     color: var(--ink-2);
   }
 
+  /* The signal + streak chips earn a faint glow ring — the cyber tell. */
+  .swatch:nth-child(3) {
+    box-shadow: var(--glow-cta);
+  }
+  .swatch--violet {
+    box-shadow: 0 6px 24px -6px var(--violet-glow);
+  }
+
   .swatch em {
+    font-family: var(--font-mono);
     font-style: normal;
     font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.02em;
   }
 </style>
