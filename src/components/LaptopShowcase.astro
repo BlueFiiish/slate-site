@@ -1,230 +1,278 @@
 ---
 /*
-  LaptopShowcase — a scroll-scrubbed CINEMATIC TRAILER playing INSIDE the
-  laptop screen. As the user scrolls, the pinned laptop advances through a
-  ~8-beat motion graphic: it opens on the real Ana rebuild, then the imagery
-  slides/scales aside to make room for designed typographic "service" slides,
-  crossfading between real screenshots (desktop sections + the mobile view) and
-  clean designed visuals, and ends on the studio wordmark.
+  LaptopShowcase — a scroll-scrubbed CINEMATIC DEMO where the laptop is the
+  HERO and, for each of six features, the DEVICE ITSELF demonstrates the
+  feature on the real rebuilt site. SHOW, DON'T TELL: the screen pans, the page
+  snaps in fast, the laptop MORPHS into a phone, a designed Google listing
+  slides up, an old template wipes into the rebuild, then it settles on the
+  studio wordmark. A small, subtle caption labels each beat beside the device —
+  it never covers the laptop, never competes with it. No colored panel.
 
   HOW IT SHIPS (per the studio's elite-toolchain + motion rules):
   - Performance-budgeted island. GSAP + ScrollTrigger is loaded LAZILY via a
     dynamic import gated behind an IntersectionObserver (island-on-visible), so
     the GSAP bundle is fetched only when the section nears the viewport and
     NEVER blocks the hero/LCP. Upfront JS is tiny (the observer shim only).
-  - The whole trailer is DOM + CSS + GSAP — NO mp4/webm in the screen. Text is
-    real, sharp, selectable, and translatable; transitions animate
-    transform/opacity ONLY (compositor-friendly).
+  - The whole demo is DOM + CSS + GSAP — NO mp4/webm. Real screenshots
+    (astro:assets, AVIF, dimension-locked) plus real text; every transition is
+    transform / opacity / clip-path only (compositor-friendly).
   - Static fallback: with JS off (or before hydration) the section renders
     complete and legible — the laptop shows the hero rebuild and ALL SIX
-    services appear as a readable grid below it. Nothing is hidden behind the
-    animation.
+    features render as a readable list below it. Nothing is hidden.
   - prefers-reduced-motion: the script bails before building; CSS shows the
-    settled end-state (closing frame + the six services listed), no scrub.
-  - Route-leave cleanup: the gsap.context (timeline + ScrollTrigger) is reverted
-    on astro:before-swap AND pagehide so View-Transition navigation can't leak.
-  - Budget: section height is reserved (pin host padding) so pinning adds zero
-    CLS. Images are dimension-locked via astro:assets (AVIF).
+    settled end-state (closing frame + the six features listed), no scrub.
+  - Route-leave cleanup: the gsap.context is reverted on astro:before-swap AND
+    pagehide so View-Transition navigation can't leak instances/memory.
+  - Budget: section height is reserved (pin host) so pinning adds zero CLS.
 */
 import { Image } from "astro:assets";
-import anaDesktop from "../assets/captures/ana-desktop-top.png";
+import anaHero from "../assets/captures/ana-desktop-top.png";
 import anaGallery from "../assets/captures/ana-desktop-gallery.png";
 import anaLower from "../assets/captures/ana-desktop-lower.png";
-import anaGallery2 from "../assets/captures/ana-mobile-gallery.png";
 import anaMobile from "../assets/captures/ana-mobile-top.png";
+import anaBefore from "../assets/captures/ana-before-desktop.png";
 
-// The six services, in trailer order. `kind` controls the on-screen treatment:
-//  - "wide"  : paired with a full-bleed desktop screenshot, panel on one side
-//  - "phone" : paired with the mobile frame, shown phone-shaped
-const services = [
+// The six features, in demo order. Each one is DEMONSTRATED on the device;
+// the caption is a tiny kicker + one short line that labels what's shown.
+const features = [
   {
     n: "01",
-    title: "Custom-designed",
-    body: "Drawn for your business from scratch — never a template.",
+    kicker: "Custom-designed",
+    line: "Drawn from scratch for your business — never a template.",
   },
   {
     n: "02",
-    title: "Built in Astro",
-    body: "Clean code that loads in about a second on a phone.",
+    kicker: "Loads in about a second",
+    line: "Clean Astro code that paints fast, even on a phone.",
   },
   {
     n: "03",
-    title: "Right on every phone",
-    body: "Designed mobile-first, so it looks sharp on any screen.",
+    kicker: "Right on every phone",
+    line: "The same site, designed to fit any screen.",
   },
   {
     n: "04",
-    title: "Your Google listing, handled",
-    body: "Your map and search presence set up and looked after.",
+    kicker: "Your Google listing, handled",
+    line: "Your map and search presence set up and looked after.",
   },
   {
     n: "05",
-    title: "Real before & afters",
-    body: "Honest rebuilds of live sites — not staged mockups.",
+    kicker: "Real before & afters",
+    line: "An honest rebuild of a live site — see the difference.",
   },
   {
     n: "06",
-    title: "One person",
-    body: "You reach the maker, start to finish. No hand-offs.",
+    kicker: "One person, start to finish",
+    line: "You reach the maker — no hand-offs, no call centre.",
   },
 ];
 ---
 
 <section class="showcase" id="showcase" aria-labelledby="showcase-heading">
-  <div class="showcase__pin" data-showcase-pin>
+  <!-- TRACK: its height is reserved statically in CSS (var(--track-h)) so the
+       scrubbed pin is HEIGHT-NEUTRAL — ScrollTrigger pins the inner viewport
+       with pinSpacing:false and never inserts a spacer, so nothing below ever
+       shifts. CLS = 0. With JS off, the track collapses to content height. -->
+  <div class="showcase__track" data-showcase-track>
+    <div class="showcase__pin" data-showcase-pin>
     <div class="showcase__inner container container--feature">
       <header class="showcase__head" data-showcase-head>
-        <p class="eyebrow">Anatomy of a Slate site</p>
+        <p class="eyebrow">A closer look</p>
         <h2 id="showcase-heading" class="showcase__headline">
-          A closer look at what you actually get.
+          Watch what you actually get.
         </h2>
         <p class="showcase__scrollhint" data-showcase-hint aria-hidden="true">
           Scroll to play
         </p>
       </header>
 
-      <!-- THE DEVICE: pinned, zooming, tilting. The trailer plays in .screen. -->
-      <div class="showcase__device" data-showcase-device>
-        <div class="showcase__glow" aria-hidden="true"></div>
-        <figure class="laptop">
-          <div class="laptop__bezel">
-            <span class="laptop__cam" aria-hidden="true"></span>
-            <div class="laptop__screen" data-screen>
-              <!-- ===== STAGE A: real screenshots that crossfade/scale ===== -->
-              <div class="frame" data-frame="hero" data-active>
-                <Image
-                  class="frame__img"
-                  src={anaDesktop}
-                  alt="The Ana's Confections homepage Slate rebuilt, shown full-screen."
-                  width={1280}
-                  sizes="(min-width: 1024px) 760px, 92vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
-              <div class="frame" data-frame="custom" aria-hidden="true">
-                <Image
-                  class="frame__img"
-                  src={anaDesktop}
-                  alt=""
-                  width={1280}
-                  sizes="(min-width: 1024px) 760px, 92vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
-              <div class="frame" data-frame="astro" aria-hidden="true">
-                <Image
-                  class="frame__img"
-                  src={anaGallery}
-                  alt="A section of Ana's rebuilt site showing the cake gallery grid."
-                  width={1280}
-                  sizes="(min-width: 1024px) 760px, 92vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
-              <div class="frame frame--phone" data-frame="phone" aria-hidden="true">
-                <Image
-                  class="frame__img frame__img--phone"
-                  src={anaMobile}
-                  alt="The same Ana's Confections site shown on a phone."
-                  width={760}
-                  sizes="(min-width: 1024px) 300px, 60vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
-              <div class="frame" data-frame="google" aria-hidden="true">
-                <Image
-                  class="frame__img"
-                  src={anaLower}
-                  alt="A lower section of Ana's rebuilt site with featured cakes and a gallery link."
-                  width={1280}
-                  sizes="(min-width: 1024px) 760px, 92vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
-              <div class="frame frame--phone" data-frame="real" aria-hidden="true">
-                <Image
-                  class="frame__img frame__img--phone"
-                  src={anaGallery2}
-                  alt="The mobile gallery of Ana's rebuilt site, full of real cakes."
-                  width={760}
-                  sizes="(min-width: 1024px) 300px, 60vw"
-                  format="avif"
-                  loading="lazy"
-                />
-              </div>
+      <!-- The stage holds the device (centered) and the small caption that
+           sits beside it. On the demo, the caption swaps per beat; statically
+           it's empty (the full list below carries the no-JS content). -->
+      <div class="showcase__stage">
+        <!-- THE DEVICE: pinned, zooming, tilting (pronounced 3D). -->
+        <div class="showcase__device" data-showcase-device>
+          <div class="showcase__glow" aria-hidden="true"></div>
 
-              <!-- ===== STAGE B: the tint panel + typographic service slides ===== -->
-              <!-- A terracotta-tinted panel that slides in to host the text. -->
-              <div class="panel" data-panel aria-hidden="true"></div>
+          <!-- LAPTOP — the hero. Recedes/folds for the phone morph. -->
+          <figure class="laptop" data-laptop>
+            <div class="laptop__bezel">
+              <span class="laptop__cam" aria-hidden="true"></span>
+              <div class="laptop__screen" data-screen>
+                <!-- == FRAME: hero (pan/zoom across the bespoke design) == -->
+                <div class="frame" data-frame="hero" data-active>
+                  <Image
+                    class="frame__img frame__img--pan"
+                    data-pan
+                    src={anaHero}
+                    alt="The Ana's Confections homepage Slate rebuilt, shown full-screen."
+                    width={1280}
+                    sizes="(min-width: 1024px) 780px, 92vw"
+                    format="avif"
+                    loading="lazy"
+                  />
+                </div>
 
-              <div class="slides" data-slides aria-hidden="true">
-                {
-                  services.map((s) => {
-                    // Beats 03 / 05 / 06 pair with a phone frame on the RIGHT,
-                    // so their panel + text sit on the LEFT.
-                    const left = s.n === "03" || s.n === "05" || s.n === "06";
-                    return (
-                      <div
-                        class:list={["slide", { "slide--left": left }]}
-                        data-slide={s.n}
-                      >
-                        <span class="slide__num">{s.n}</span>
-                        <p class="slide__title">{s.title}</p>
-                        <p class="slide__body">{s.body}</p>
+                <!-- == FRAME: gallery (the fast-paint cascade demo) == -->
+                <div class="frame frame--cascade" data-frame="gallery" aria-hidden="true">
+                  <Image
+                    class="frame__img"
+                    src={anaGallery}
+                    alt="A section of Ana's rebuilt site showing the cake gallery grid."
+                    width={1280}
+                    sizes="(min-width: 1024px) 780px, 92vw"
+                    format="avif"
+                    loading="lazy"
+                  />
+                  <!-- light "snap-in" sheen rows to convey instant paint -->
+                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                  <span class="cascade__row" data-cascade aria-hidden="true"></span>
+                  <span class="speedcue" data-speedcue aria-hidden="true">
+                    <span class="speedcue__dot"></span>0.8s
+                  </span>
+                </div>
+
+                <!-- == FRAME: Google Business listing (designed mock) == -->
+                <div class="frame frame--google" data-frame="google" aria-hidden="true">
+                  <div class="gbiz" aria-hidden="true">
+                    <div class="gbiz__main">
+                      <p class="gbiz__kicker">Bakery &middot; Rosenberg, TX</p>
+                      <h3 class="gbiz__name">Ana&rsquo;s Confections</h3>
+                      <p class="gbiz__rating">
+                        <strong>4.8</strong>
+                        <span class="gbiz__stars" aria-hidden="true">
+                          <span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span>&#9733;</span><span class="is-half">&#9733;</span>
+                        </span>
+                        <span class="gbiz__count">Google reviews</span>
+                      </p>
+                      <ul class="gbiz__rows">
+                        <li><span class="gbiz__ico" data-ico="open"></span><span><strong>Open</strong> &middot; Closes 6 PM</span></li>
+                        <li><span class="gbiz__ico" data-ico="pin"></span>808 Third St, Rosenberg, TX</li>
+                        <li><span class="gbiz__ico" data-ico="phone"></span>(979) 533-0651</li>
+                      </ul>
+                      <div class="gbiz__chips">
+                        <span class="gbiz__chip gbiz__chip--accent">Directions</span>
+                        <span class="gbiz__chip">Website</span>
+                        <span class="gbiz__chip">Call</span>
                       </div>
-                    );
-                  })
-                }
-              </div>
+                    </div>
+                    <div class="gbiz__map" aria-hidden="true">
+                      <span class="gbiz__road gbiz__road--a"></span>
+                      <span class="gbiz__road gbiz__road--b"></span>
+                      <span class="gbiz__road gbiz__road--c"></span>
+                      <span class="gbiz__marker"></span>
+                    </div>
+                  </div>
+                </div>
 
-              <!-- ===== CLOSING FRAME: the studio wordmark (also the no-JS
-                   settled end-state shown inside the screen). ===== -->
-              <div class="closing" data-closing aria-hidden="true">
-                <span class="closing__eyebrow">Slate &amp; Co.</span>
-                <p class="closing__line">See the real before &amp; afters.</p>
-              </div>
+                <!-- == FRAME: before/after wipe (old template -> rebuild) == -->
+                <div class="frame frame--wipe" data-frame="wipe" aria-hidden="true">
+                  <!-- AFTER (rebuild) sits underneath, full -->
+                  <Image
+                    class="frame__img"
+                    src={anaHero}
+                    alt="The rebuilt Ana's Confections homepage."
+                    width={1280}
+                    sizes="(min-width: 1024px) 780px, 92vw"
+                    format="avif"
+                    loading="lazy"
+                  />
+                  <!-- BEFORE (old template) wipes away to reveal it -->
+                  <div class="wipe__before" data-wipe>
+                    <Image
+                      class="frame__img"
+                      src={anaBefore}
+                      alt="The original Ana's Confections template site, before the rebuild."
+                      width={1280}
+                      sizes="(min-width: 1024px) 780px, 92vw"
+                      format="avif"
+                      loading="lazy"
+                    />
+                    <span class="wipe__tag">Before</span>
+                  </div>
+                  <span class="wipe__handle" data-wipe-handle aria-hidden="true"></span>
+                  <span class="wipe__tag wipe__tag--after">After</span>
+                </div>
 
-              <!-- Subtle film grade so screenshots feel composed, not pasted. -->
-              <span class="screen__vignette" aria-hidden="true"></span>
+                <!-- == CLOSING wordmark (also the no-JS settled end-state) == -->
+                <div class="closing" data-closing>
+                  <span class="closing__mark">Slate &amp; Co.</span>
+                  <p class="closing__line">One maker. Real rebuilds.</p>
+                </div>
+
+                <span class="screen__vignette" aria-hidden="true"></span>
+              </div>
             </div>
-          </div>
-          <div class="laptop__base" aria-hidden="true">
-            <span class="laptop__hinge"></span>
-          </div>
-        </figure>
-        <p class="showcase__caption">
-          A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
-        </p>
+            <div class="laptop__base" aria-hidden="true">
+              <span class="laptop__hinge"></span>
+            </div>
+          </figure>
+
+          <!-- PHONE — hidden until the morph beat, then scales up centered
+               over the receding laptop, screen showing the real mobile layout. -->
+          <figure class="phone" data-phone aria-hidden="true">
+            <span class="phone__notch" aria-hidden="true"></span>
+            <div class="phone__screen">
+              <Image
+                class="phone__img"
+                src={anaMobile}
+                alt="The same Ana's Confections site shown on a phone."
+                width={760}
+                sizes="(min-width: 1024px) 280px, 56vw"
+                format="avif"
+                loading="lazy"
+              />
+            </div>
+          </figure>
+        </div>
+
+        <!-- Reserve the caption's vertical room in flow (zero CLS) ... -->
+        <div class="showcase__capspace" aria-hidden="true"></div>
+        <!-- ... while the caption itself is absolutely positioned inside it.
+             Lives just below the device; never over it. Static = hidden (the
+             list below carries the no-JS content). -->
+        <div class="showcase__caption" data-caption aria-hidden="true">
+          {
+            features.map((feat) => (
+              <p class="cap" data-cap={feat.n}>
+                <span class="cap__kicker">{feat.kicker}</span>
+                <span class="cap__line">{feat.line}</span>
+              </p>
+            ))
+          }
+        </div>
       </div>
 
-      <!-- ===== STATIC / NO-JS / a11y service list. Always in the DOM so the
-           six services are legible without the trailer. The live island hides
-           this (it's redundant once the screen plays the slides). ===== -->
-      <ul class="showcase__list" data-showcase-list>
-        {
-          services.map((s) => (
-            <li class="svc">
-              <span class="svc__num">{s.n}</span>
-              <div>
-                <p class="svc__title">{s.title}</p>
-                <p class="svc__body">{s.body}</p>
-              </div>
-            </li>
-          ))
-        }
-      </ul>
+      <p class="showcase__credit">
+        A real rebuild: <strong>Ana&rsquo;s Confections</strong>, Rosenberg TX.
+      </p>
+
+    </div>
     </div>
   </div>
+
+  <!-- == STATIC / NO-JS / a11y list. OUTSIDE the sticky track so it never
+       pins and never shifts. Always in the DOM so all six features are legible
+       without the demo; the live island hides it (the screen plays them). == -->
+  <ul class="showcase__list container container--feature" data-showcase-list>
+    {
+      features.map((feat) => (
+        <li class="svc">
+          <span class="svc__num">{feat.n}</span>
+          <div>
+            <p class="svc__title">{feat.kicker}</p>
+            <p class="svc__body">{feat.line}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
 </section>
 
 <script>
   // ----------------------------------------------------------------------
-  // Island-on-visible: load GSAP + wire the scrubbed trailer only when the
+  // Island-on-visible: load GSAP + wire the scrubbed demo only when the
   // section nears the viewport, and only when motion is allowed. Everything
   // is progressive enhancement over the complete static markup above.
   // ----------------------------------------------------------------------
@@ -237,176 +285,241 @@ const services = [
     let built = false;
     let teardown: (() => void) | null = null;
 
+    // Wait for fonts + a couple of frames so ScrollTrigger pins against the
+    // FINAL geometry — late text/image paint can't then shift the pinned
+    // layout (keeps CLS at 0 in cold Lighthouse runs).
+    function settled(): Promise<void> {
+      return new Promise((resolve) => {
+        const ready = (document as any).fonts?.ready ?? Promise.resolve();
+        ready.then(() => {
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => resolve())
+          );
+        });
+      });
+    }
+
     async function build() {
       if (built) return;
       built = true;
 
-      const { gsap } = await import("gsap");
-      const mod: STModule = await import("gsap/ScrollTrigger");
+      const [{ gsap }, mod] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger") as Promise<STModule>,
+        settled(),
+      ]);
       const ScrollTrigger = mod.ScrollTrigger;
       gsap.registerPlugin(ScrollTrigger);
 
-      const pin = section!.querySelector<HTMLElement>("[data-showcase-pin]");
-      const device = section!.querySelector<HTMLElement>(
-        "[data-showcase-device]"
-      );
-      const hint = section!.querySelector<HTMLElement>("[data-showcase-hint]");
-      const panel = section!.querySelector<HTMLElement>("[data-panel]");
-      const closing = section!.querySelector<HTMLElement>("[data-closing]");
-      if (!pin || !device || !panel) return;
+      const q = <T extends HTMLElement = HTMLElement>(sel: string) =>
+        section!.querySelector<T>(sel);
+      const qa = (sel: string) =>
+        Array.from(section!.querySelectorAll<HTMLElement>(sel));
+
+      const track = q("[data-showcase-track]");
+      const pin = q("[data-showcase-pin]");
+      const device = q("[data-showcase-device]");
+      const laptop = q("[data-laptop]");
+      const phone = q("[data-phone]");
+      const hint = q("[data-showcase-hint]");
+      const closing = q("[data-closing]");
+      if (!track || !pin || !device || !laptop || !phone) return;
 
       const frame = (name: string) =>
-        section!.querySelector<HTMLElement>(`[data-frame="${name}"]`);
-      const slide = (n: string) =>
-        section!.querySelector<HTMLElement>(`[data-slide="${n}"]`);
-
+        q(`[data-frame="${name}"]`);
       const f = {
         hero: frame("hero"),
-        custom: frame("custom"),
-        astro: frame("astro"),
-        phone: frame("phone"),
+        gallery: frame("gallery"),
         google: frame("google"),
-        real: frame("real"),
+        wipe: frame("wipe"),
       };
-      const s = {
-        s1: slide("01"),
-        s2: slide("02"),
-        s3: slide("03"),
-        s4: slide("04"),
-        s5: slide("05"),
-        s6: slide("06"),
-      };
+      const pan = q("[data-pan]");
+      const cascade = qa("[data-cascade]");
+      const speedcue = q("[data-speedcue]");
+      const wipeBefore = q("[data-wipe]");
+      const wipeHandle = q("[data-wipe-handle]");
+      const caps = qa("[data-cap]");
+      const cap = (n: string) => caps.find((c) => c.dataset.cap === n) || null;
 
       // Hand control to GSAP: CSS static end-state styles step aside.
       section!.classList.add("is-live");
 
       const ctx = gsap.context(() => {
-        // ----- explicit start-state (transform/opacity only) -----
-        // PUSHED 3D tilt: more pronounced than the prior subtle version.
-        gsap.set(device, { scale: 0.8, rotateX: 11, rotateY: -15, y: 10 });
+        // ----- explicit start-state (transform / opacity / clip only) -----
+        // Pronounced 3D tilt at rest; settles as it zooms in.
+        gsap.set(device, { scale: 0.82, rotateX: 12, rotateY: -16, y: 10 });
+        gsap.set(laptop, { autoAlpha: 1, scale: 1, transformOrigin: "50% 60%" });
+        gsap.set(phone, { autoAlpha: 0, scale: 0.46, y: 8 });
 
-        // All frames hidden except the opening hero.
-        const allFrames = Object.values(f).filter(Boolean) as HTMLElement[];
-        gsap.set(allFrames, { autoAlpha: 0, scale: 1.06 });
-        gsap.set(f.hero!, { autoAlpha: 1, scale: 1, xPercent: 0 });
+        // Frames: only hero visible to open.
+        const allFrames = [f.hero, f.gallery, f.google, f.wipe].filter(
+          Boolean
+        ) as HTMLElement[];
+        gsap.set(allFrames, { autoAlpha: 0 });
+        gsap.set(f.hero!, { autoAlpha: 1 });
+        if (pan) gsap.set(pan, { scale: 1.18, yPercent: 0, xPercent: 0 });
 
-        // Panel + every slide + closing start hidden.
-        gsap.set(panel, { autoAlpha: 0, xPercent: 8 });
-        const allSlides = Object.values(s).filter(Boolean) as HTMLElement[];
-        gsap.set(allSlides, { autoAlpha: 0, y: 18 });
-        if (closing) gsap.set(closing, { autoAlpha: 0, scale: 1.04 });
+        gsap.set(cascade, { yPercent: 16, autoAlpha: 0 });
+        if (speedcue) gsap.set(speedcue, { autoAlpha: 0, scale: 0.9 });
+        if (wipeBefore) gsap.set(wipeBefore, { clipPath: "inset(0 0% 0 0)" });
+        if (wipeHandle) gsap.set(wipeHandle, { left: "100%", autoAlpha: 0 });
 
+        gsap.set(caps, { autoAlpha: 0, y: 12 });
+        if (closing) gsap.set(closing, { autoAlpha: 0, scale: 1.05 });
+
+        // The pin is done by CSS `position: sticky` on the inner viewport, and
+        // the TRACK reserves its full height statically — so there is NO
+        // ScrollTrigger pin and NO spacer insertion. Nothing below ever shifts
+        // (CLS = 0). ScrollTrigger only SCRUBS the timeline across the track's
+        // travel (track height - one viewport).
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
-            trigger: pin,
+            trigger: track,
             start: "top top",
-            // Generous pin so ~8 beats breathe (Apple-style pacing).
-            end: "+=360%",
+            end: "bottom bottom",
             scrub: 0.7,
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
             invalidateOnRefresh: true,
           },
         });
 
-        // Helper: cinematic ease for discrete beat transitions inside the
-        // otherwise-linear scrub (keeps each beat readable, not mushy).
         const E = "power2.inOut";
 
-        // ============================================================
-        // BEAT 0 (0.00 -> 0.10): OPEN. Laptop zooms in + tilt settles
-        // most of the way. Hero rebuild on screen, no text. Hint fades.
-        // ============================================================
-        tl.to(device, { scale: 1, rotateX: 4, rotateY: -7, y: 0, ease: E, duration: 0.1 }, 0);
-        if (hint) tl.to(hint, { autoAlpha: 0, duration: 0.04 }, 0.02);
+        // helper to bring a caption in / out at given times
+        const capIn = (n: string, at: number) => {
+          const c = cap(n);
+          if (c) tl.to(c, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.04 }, at);
+        };
+        const capOut = (n: string, at: number) => {
+          const c = cap(n);
+          if (c) tl.to(c, { autoAlpha: 0, y: -10, ease: "power2.in", duration: 0.03 }, at);
+        };
 
         // ============================================================
-        // BEAT 1 (0.12 -> 0.24): SERVICE 01 "Custom-designed".
-        // Hero photo scales + slides LEFT to make room; panel slides in
-        // from the right; slide 1 types/fades over it. Tilt fully flat.
+        // BEAT 0 (0.00 -> 0.08): OPEN. Laptop zooms in, tilt settles.
+        // Real hero on screen. Hint fades.
         // ============================================================
-        tl.to(device, { rotateX: 0, rotateY: 0, ease: E, duration: 0.08 }, 0.12);
-        tl.to(f.hero!, { xPercent: -20, scale: 0.9, ease: E, duration: 0.1 }, 0.12);
-        tl.to(panel, { autoAlpha: 1, xPercent: 0, ease: E, duration: 0.08 }, 0.14);
-        tl.to(s.s1!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.17);
+        tl.to(device, { scale: 1, rotateX: 6, rotateY: -8, y: 0, ease: E, duration: 0.08 }, 0);
+        if (hint) tl.to(hint, { autoAlpha: 0, duration: 0.03 }, 0.02);
 
         // ============================================================
-        // BEAT 2 (0.28 -> 0.40): SERVICE 02 "Built in Astro".
-        // Crossfade hero->gallery (a different real shot), swap slide.
+        // BEAT 1 (0.08 -> 0.18): CUSTOM-DESIGNED.
+        // Tilt goes flat; the screen does a slow, premium pan/zoom across
+        // the bespoke hero (showing the craft). Caption 01.
         // ============================================================
-        tl.to(s.s1!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.28);
-        tl.to(f.hero!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.29);
-        tl.fromTo(
-          f.astro!,
-          { autoAlpha: 0, scale: 1.06, xPercent: 0 },
-          { autoAlpha: 1, scale: 0.9, xPercent: -20, ease: E, duration: 0.08 },
-          0.29
+        tl.to(device, { rotateX: 0, rotateY: 0, ease: E, duration: 0.06 }, 0.08);
+        capIn("01", 0.1);
+        if (pan)
+          tl.to(pan, { scale: 1.04, yPercent: -10, xPercent: 4, ease: E, duration: 0.14 }, 0.06);
+
+        // ============================================================
+        // BEAT 2 (0.20 -> 0.32): LOADS IN ~1s.
+        // Crossfade to the gallery; its rows SNAP up + a "0.8s" cue pops —
+        // conveying an instant, crisp paint. Caption 02.
+        // ============================================================
+        capOut("01", 0.2);
+        tl.to(f.hero!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.2);
+        tl.to(f.gallery!, { autoAlpha: 1, ease: E, duration: 0.04 }, 0.21);
+        capIn("02", 0.23);
+        // crisp cascade: rows snap in fast, slightly staggered
+        tl.to(
+          cascade,
+          {
+            yPercent: 0,
+            autoAlpha: 1,
+            ease: "power3.out",
+            duration: 0.05,
+            stagger: 0.018,
+          },
+          0.22
         );
-        tl.to(s.s2!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.34);
+        if (speedcue)
+          tl.to(speedcue, { autoAlpha: 1, scale: 1, ease: "back.out(2)", duration: 0.05 }, 0.26);
+        // fade the helper sheens back out so the real shot reads clean
+        tl.to(cascade, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.3);
 
         // ============================================================
-        // BEAT 3 (0.44 -> 0.58): SERVICE 03 "Right on every phone".
-        // Mask-feel swap to the PHONE frame; panel flips to the LEFT,
-        // phone sits RIGHT. Slide 3 enters.
+        // BEAT 3 (0.34 -> 0.48): RIGHT ON EVERY PHONE — the morph.
+        // The laptop RECEDES + folds back; a PHONE scales up centered with
+        // the real mobile layout. The money beat. Caption 03.
         // ============================================================
-        tl.to(s.s2!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.44);
-        tl.to(f.astro!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.45);
-        tl.to(panel, { xPercent: -100 + 8, ease: E, duration: 0.07 }, 0.45); // panel to left side
-        tl.fromTo(
-          f.phone!,
-          { autoAlpha: 0, scale: 0.7, xPercent: 26, yPercent: 6 },
-          { autoAlpha: 1, scale: 0.82, xPercent: 26, yPercent: 0, ease: E, duration: 0.09 },
-          0.46
+        capOut("02", 0.34);
+        if (speedcue) tl.to(speedcue, { autoAlpha: 0, duration: 0.03 }, 0.34);
+        // laptop recedes + tips back as if folding away
+        tl.to(
+          laptop,
+          { scale: 0.74, autoAlpha: 0, rotateX: 18, y: 24, ease: E, duration: 0.1 },
+          0.35
         );
-        tl.to(s.s3!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.51);
+        // phone rises into place, centered
+        tl.to(
+          phone,
+          { autoAlpha: 1, scale: 1, y: 0, ease: "power3.out", duration: 0.11 },
+          0.37
+        );
+        capIn("03", 0.42);
+
+        // hold the phone a touch, then morph BACK to laptop for beat 4
+        tl.to(phone, { scale: 0.46, autoAlpha: 0, y: 8, ease: E, duration: 0.08 }, 0.5);
+        tl.to(
+          laptop,
+          { scale: 1, autoAlpha: 1, rotateX: 0, y: 0, ease: "power3.out", duration: 0.09 },
+          0.52
+        );
+        capOut("03", 0.5);
 
         // ============================================================
-        // BEAT 4 (0.62 -> 0.74): SERVICE 04 "Your Google listing, handled".
-        // Phone exits, panel returns to RIGHT, lower-section shot enters.
+        // BEAT 4 (0.54 -> 0.66): GOOGLE LISTING, HANDLED.
+        // Screen shifts to the designed Google-Business mock (slides up).
+        // Caption 04.
         // ============================================================
-        tl.to(s.s3!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.62);
-        tl.to(f.phone!, { autoAlpha: 0, scale: 0.7, ease: E, duration: 0.06 }, 0.62);
-        tl.to(panel, { xPercent: 0, ease: E, duration: 0.07 }, 0.63); // panel back to right
+        tl.to(f.gallery!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.54);
         tl.fromTo(
           f.google!,
-          { autoAlpha: 0, scale: 1.06, xPercent: 0 },
-          { autoAlpha: 1, scale: 0.9, xPercent: -20, ease: E, duration: 0.08 },
-          0.63
+          { autoAlpha: 0, yPercent: 6 },
+          { autoAlpha: 1, yPercent: 0, ease: E, duration: 0.06 },
+          0.55
         );
-        tl.to(s.s4!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.07 }, 0.68);
+        capIn("04", 0.58);
 
         // ============================================================
-        // BEAT 5 (0.78 -> 0.86): SERVICE 05 "Real before & afters".
-        // Crossfade to the mobile gallery (phone), panel to LEFT again.
+        // BEAT 5 (0.68 -> 0.84): REAL BEFORE & AFTERS.
+        // The old template fills the screen, then WIPES left-to-right to
+        // reveal the rebuild underneath (handle tracks the seam). Caption 05.
         // ============================================================
-        tl.to(s.s4!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.05 }, 0.78);
-        tl.to(f.google!, { autoAlpha: 0, ease: E, duration: 0.06 }, 0.78);
-        tl.to(panel, { xPercent: -100 + 8, ease: E, duration: 0.06 }, 0.79);
-        tl.fromTo(
-          f.real!,
-          { autoAlpha: 0, scale: 0.72, xPercent: 26 },
-          { autoAlpha: 1, scale: 0.82, xPercent: 26, ease: E, duration: 0.08 },
-          0.79
-        );
-        tl.to(s.s5!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.06 }, 0.83);
+        capOut("04", 0.68);
+        tl.to(f.google!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.68);
+        tl.to(f.wipe!, { autoAlpha: 1, ease: E, duration: 0.04 }, 0.69);
+        capIn("05", 0.72);
+        if (wipeHandle) tl.set(wipeHandle, { autoAlpha: 1 }, 0.7);
+        // wipe the BEFORE layer away (clip from the right), handle follows seam
+        if (wipeBefore)
+          tl.fromTo(
+            wipeBefore,
+            { clipPath: "inset(0 0% 0 0)" },
+            { clipPath: "inset(0 100% 0 0)", ease: E, duration: 0.13 },
+            0.72
+          );
+        if (wipeHandle)
+          tl.fromTo(
+            wipeHandle,
+            { left: "100%" },
+            { left: "0%", ease: E, duration: 0.13 },
+            0.72
+          );
+        if (wipeHandle) tl.to(wipeHandle, { autoAlpha: 0, duration: 0.03 }, 0.85);
 
         // ============================================================
-        // BEAT 6 (0.88 -> 0.93): SERVICE 06 "One person".
-        // Same real frame holds; slide 5 swaps to slide 6 (panel centers).
+        // BEAT 6 (0.86 -> 1.00): ONE PERSON. Quiet close — the screen
+        // settles to the Slate & Co. wordmark with a confident push-in.
+        // Caption 06.
         // ============================================================
-        tl.to(s.s5!, { autoAlpha: 0, y: -18, ease: "power2.in", duration: 0.04 }, 0.88);
-        tl.to(s.s6!, { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.06 }, 0.9);
-
-        // ============================================================
-        // BEAT 7 (0.94 -> 1.00): CLOSING. Everything settles to the
-        // studio wordmark frame. Tiny push-in for a confident button.
-        // ============================================================
-        tl.to([f.real!, panel, s.s6!], { autoAlpha: 0, ease: E, duration: 0.05 }, 0.94);
+        capOut("05", 0.86);
+        tl.to(f.wipe!, { autoAlpha: 0, ease: E, duration: 0.04 }, 0.86);
         if (closing)
-          tl.to(closing, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.95);
-        tl.to(device, { scale: 1.02, ease: "power1.out", duration: 0.05 }, 0.95);
+          tl.to(closing, { autoAlpha: 1, scale: 1, ease: "power2.out", duration: 0.06 }, 0.87);
+        capIn("06", 0.9);
+        tl.to(device, { scale: 1.02, ease: "power1.out", duration: 0.06 }, 0.9);
       }, section!);
 
       teardown = () => {
@@ -457,7 +570,7 @@ const services = [
 <style>
   /* =====================================================================
      STATIC / FALLBACK (default, no-JS, settled). The laptop shows the
-     CLOSING wordmark frame and the six services render in a legible grid
+     CLOSING wordmark frame; the six features render in a legible grid
      below it. Nothing is hidden behind the animation.
      ===================================================================== */
   .showcase {
@@ -467,15 +580,40 @@ const services = [
     overflow: clip;
   }
 
+  /* TRACK: by default (no-JS / reduced-motion) it is just a normal block and
+     the content flows at natural height. When scripting + motion are available
+     (`.js-motion`, set before first paint), it reserves a tall scroll track so
+     the sticky pin has travel — reserved in the INITIAL layout, so the later
+     GSAP build inserts no spacer and shifts nothing below (CLS = 0). */
+  .showcase__track {
+    position: relative;
+  }
+  :global(.js-motion) .showcase__track {
+    /* travel = track height - one sticky viewport. ~5 screens of scrub. */
+    height: 600vh;
+  }
+
   .showcase__pin {
-    /* Reserve height so pinning adds ZERO CLS. */
     padding-block: var(--section-y);
+  }
+  /* When motion is on, the inner viewport STICKS for the whole track — this is
+     the pin, done in pure CSS (works even before/without GSAP). */
+  :global(.js-motion) .showcase__pin {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+    padding-block: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: clip;
   }
 
   .showcase__inner {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
   }
 
   .showcase__head {
@@ -497,16 +635,23 @@ const services = [
     letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
     color: var(--ink-3);
-    /* Only meaningful once the trailer can play. Hidden when not live. */
-    opacity: 0;
+    opacity: 0; /* only meaningful once live */
   }
 
-  /* ---- Device ---- */
+  /* ---- Stage: device centered, caption beside it ---- */
+  .showcase__stage {
+    position: relative; /* caption anchors here */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+  }
+
   .showcase__device {
     position: relative;
     isolation: isolate;
-    width: min(100%, 860px);
-    margin-top: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+    width: min(100%, 880px);
     perspective: 1600px; /* parent owns perspective so child rotate reads 3D */
     will-change: transform;
   }
@@ -528,6 +673,7 @@ const services = [
     filter: blur(10px);
   }
 
+  /* ---- Laptop ---- */
   .laptop {
     margin: 0;
     transform-style: preserve-3d;
@@ -562,7 +708,7 @@ const services = [
     isolation: isolate;
   }
 
-  /* ---- Stage A: real-screenshot frames ---- */
+  /* ---- Screenshot frames ---- */
   .frame {
     position: absolute;
     inset: 0;
@@ -574,99 +720,361 @@ const services = [
     height: 100%;
     object-fit: cover;
     object-position: top center;
-  }
-
-  /* Phone-shaped frames sit on a soft paper field, centered. */
-  .frame--phone {
-    background: linear-gradient(180deg, var(--paper) 0%, var(--accent-tint) 160%);
-    display: grid;
-    place-items: center;
-  }
-
-  .frame__img--phone {
-    width: auto;
-    height: 92%;
-    aspect-ratio: 390 / 844;
-    object-fit: cover;
-    object-position: top center;
-    border-radius: 14px;
-    box-shadow: var(--shadow-2);
-  }
-
-  /* In the static end-state only the CLOSING frame shows. Hide stage-A
-     frames + the panel + slides so the finished screen reads cleanly. */
-  .frame,
-  .panel,
-  .slides {
-    opacity: 0;
-  }
-
-  /* ---- Stage B: tint panel + typographic slides ---- */
-  .panel {
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    right: 0;
-    width: 52%;
-    height: 100%;
-    background: linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--accent) 92%, #000 8%) 0%,
-      var(--accent) 60%,
-      var(--accent-hover) 100%
-    );
-  }
-
-  .slides {
-    position: absolute;
-    z-index: 3;
-    inset: 0;
-  }
-
-  .slide {
-    position: absolute;
-    /* Default: text lives over the panel on the RIGHT half. The panel
-       moves left for phone beats; the slides stay centered in the right
-       column, which still reads because the panel underlaps them.
-       To keep text legible regardless of panel side, slides are anchored
-       to the right column and use on-accent ink. */
-    top: 50%;
-    right: 6%;
-    width: 42%;
-    transform: translateY(-50%);
-    color: var(--accent-on);
-  }
-
-  /* Phone beats: panel + text on the LEFT, phone on the right. */
-  .slide--left {
-    right: auto;
-    left: 6%;
-  }
-
-  .slide__num {
     display: block;
-    font-family: var(--font-display);
-    font-size: var(--fs-small);
+  }
+
+  /* hero pan layer is slightly oversized so panning never shows an edge */
+  .frame__img--pan {
+    transform-origin: center top;
+  }
+
+  /* In the static / no-JS end-state only the CLOSING wordmark shows in the
+     screen. The demo-only layers (screenshot frames, the Google mock, the
+     before/after wipe, the cascade sheens, the phone) are display:none so they
+     are NOT painted and contribute ZERO layout shift on initial load. They are
+     revealed to GSAP only at `is-live` — which fires AFTER fonts/LCP settle —
+     so revealing them shifts nothing on the page (they're absolute inside the
+     fixed-size screen). */
+  .frame,
+  .phone,
+  .speedcue,
+  .cascade__row,
+  .wipe__handle {
+    display: none;
+  }
+  .showcase.is-live .frame,
+  .showcase.is-live .phone,
+  .showcase.is-live .speedcue,
+  .showcase.is-live .cascade__row,
+  .showcase.is-live .wipe__handle {
+    display: block;
+    opacity: 0; /* hand control to GSAP's autoAlpha */
+  }
+  /* The closing frame is the static end-state, so it stays displayed; its
+     opacity is handed to GSAP only once live (revealed on the final beat). */
+  .closing {
+    display: grid;
+  }
+
+  /* ---- Beat 2: fast-paint cascade sheens + speed cue ---- */
+  .cascade__row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 33.33%;
+    z-index: 2;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--paper) 92%, transparent) 0%,
+      color-mix(in srgb, var(--paper) 40%, transparent) 100%
+    );
+    pointer-events: none;
+  }
+  .cascade__row:nth-of-type(1) {
+    top: 0;
+  }
+  .cascade__row:nth-of-type(2) {
+    top: 33.33%;
+  }
+  .cascade__row:nth-of-type(3) {
+    top: 66.66%;
+  }
+
+  .speedcue {
+    position: absolute;
+    z-index: 4;
+    top: 8%;
+    right: 6%;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: 0.35em 0.7em;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--ink) 88%, transparent);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: clamp(0.7rem, 0.6rem + 0.4vw, 0.9rem);
     font-weight: 600;
     font-feature-settings: "tnum";
-    color: color-mix(in srgb, var(--accent-on) 80%, transparent);
-    margin-bottom: var(--space-8);
+    letter-spacing: 0.01em;
+    box-shadow: var(--shadow-2);
+  }
+  .speedcue__dot {
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background: #5bbf7b;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #5bbf7b 35%, transparent);
   }
 
-  .slide__title {
+  /* ---- Beat 4: designed Google-Business listing mock ---- */
+  .frame--google {
+    background: var(--paper);
+  }
+  .gbiz {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: clamp(0.75rem, 0.3rem + 1.6vw, 1.75rem);
+    padding: clamp(1rem, 0.4rem + 2.2vw, 2.4rem);
+    text-align: left;
+  }
+  .gbiz__main {
+    align-self: center;
+    min-width: 0;
+  }
+  .gbiz__kicker {
+    font-family: var(--font-body);
+    font-size: clamp(0.6rem, 0.5rem + 0.4vw, 0.8rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .gbiz__name {
+    margin-top: 0.15em;
     font-family: var(--font-display);
-    font-size: clamp(1.25rem, 0.9rem + 1.6vw, 2rem);
+    font-size: clamp(1.1rem, 0.7rem + 1.9vw, 2rem);
     font-weight: 500;
-    line-height: 1.1;
+    line-height: 1.05;
     letter-spacing: var(--tracking-h3);
+    color: var(--ink);
+  }
+  .gbiz__rating {
+    margin-top: 0.5em;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-size: clamp(0.7rem, 0.55rem + 0.45vw, 0.9rem);
+    color: var(--ink-2);
+  }
+  .gbiz__rating strong {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .gbiz__stars {
+    display: inline-flex;
+    color: #e8a531;
+    letter-spacing: -0.02em;
+    font-size: 0.95em;
+  }
+  .gbiz__stars .is-half {
+    color: color-mix(in srgb, #e8a531 45%, var(--hairline));
+  }
+  .gbiz__count {
+    color: var(--ink-3);
+  }
+  .gbiz__rows {
+    margin-top: 0.7em;
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.4em;
+    font-size: clamp(0.65rem, 0.5rem + 0.45vw, 0.85rem);
+    color: var(--ink-2);
+  }
+  .gbiz__rows li {
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+  }
+  .gbiz__rows strong {
+    color: #2c8a4a;
+    font-weight: 600;
+  }
+  .gbiz__ico {
+    flex: none;
+    width: 0.85em;
+    height: 0.85em;
+    border-radius: 3px;
+    background: var(--accent-tint);
+    position: relative;
+  }
+  .gbiz__ico[data-ico="open"] {
+    border-radius: 50%;
+    background: color-mix(in srgb, #2c8a4a 22%, transparent);
+  }
+  .gbiz__ico[data-ico="pin"] {
+    background: var(--accent);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    width: 0.7em;
+    height: 0.7em;
+  }
+  .gbiz__ico[data-ico="phone"] {
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .gbiz__chips {
+    margin-top: 0.85em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45em;
+  }
+  .gbiz__chip {
+    font-family: var(--font-body);
+    font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.78rem);
+    font-weight: 600;
+    padding: 0.4em 0.85em;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--hairline);
+    color: var(--ink-2);
+  }
+  .gbiz__chip--accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-on);
+  }
+  .gbiz__map {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 80% 10%, #e9efe6 0%, transparent 60%),
+      linear-gradient(160deg, #eef1ec 0%, #e4e9e2 100%);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    min-height: 6rem;
+  }
+  .gbiz__road {
+    position: absolute;
+    background: #fff;
+    box-shadow: 0 0 0 1px #dfe4dc;
+  }
+  .gbiz__road--a {
+    top: 38%;
+    left: -5%;
+    width: 110%;
+    height: 7%;
+    transform: rotate(-8deg);
+  }
+  .gbiz__road--b {
+    top: -10%;
+    left: 58%;
+    width: 9%;
+    height: 120%;
+    transform: rotate(6deg);
+  }
+  .gbiz__road--c {
+    top: 70%;
+    left: -5%;
+    width: 80%;
+    height: 5%;
+    transform: rotate(4deg);
+    background: #f4f6f2;
+  }
+  .gbiz__marker {
+    position: absolute;
+    top: 42%;
+    left: 52%;
+    width: 0.95em;
+    height: 0.95em;
+    background: var(--accent);
+    border-radius: 50% 50% 50% 0;
+    transform: translate(-50%, -100%) rotate(-45deg);
+    box-shadow: var(--shadow-2);
+  }
+  .gbiz__marker::after {
+    content: "";
+    position: absolute;
+    inset: 28%;
+    background: var(--paper);
+    border-radius: 50%;
   }
 
-  .slide__body {
-    margin-top: var(--space-12);
-    font-size: clamp(0.8125rem, 0.7rem + 0.4vw, 0.9375rem);
-    line-height: 1.45;
-    color: color-mix(in srgb, var(--accent-on) 88%, transparent);
-    max-width: 26ch;
+  /* ---- Beat 5: before/after wipe ---- */
+  .wipe__before {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    will-change: clip-path;
+  }
+  .wipe__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 3;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--paper);
+    box-shadow: 0 0 0 1px hsl(28 30% 12% / 0.15);
+  }
+  .wipe__handle::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.6em;
+    height: 1.6em;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow: var(--shadow-2);
+  }
+  .wipe__tag {
+    position: absolute;
+    z-index: 4;
+    bottom: 6%;
+    left: 5%;
+    font-family: var(--font-body);
+    font-size: clamp(0.6rem, 0.5rem + 0.35vw, 0.78rem);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.3em 0.7em;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--ink) 82%, transparent);
+    color: var(--paper);
+  }
+  .wipe__tag--after {
+    left: auto;
+    right: 5%;
+    background: var(--accent);
+  }
+
+  /* ---- Phone (morph target) ---- */
+  .phone {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    margin: 0;
+    place-items: center;
+    pointer-events: none;
+    /* NOTE: `display` is intentionally controlled by the shared hide rule
+       above (.frame/.phone { display:none }) and the is-live reveal, so the
+       phone is NOT painted in the static / no-JS end-state. */
+  }
+  .showcase.is-live .phone {
+    display: grid; /* reveal as a centered grid only once GSAP drives it */
+  }
+  .phone__screen {
+    position: relative;
+    height: 86%;
+    aspect-ratio: 390 / 844;
+    border-radius: clamp(18px, 2.4vw, 30px);
+    padding: 6px;
+    background: linear-gradient(160deg, #2c2c30, #161618);
+    box-shadow: var(--shadow-3);
+    overflow: hidden;
+  }
+  .phone__notch {
+    position: absolute;
+    z-index: 2;
+    top: 7%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26%;
+    height: 1.4%;
+    min-height: 5px;
+    border-radius: var(--radius-pill);
+    background: #0c0c0e;
+  }
+  .phone__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: clamp(13px, 2vw, 24px);
+    display: block;
   }
 
   /* ---- Closing wordmark frame (= static settled end-state) ---- */
@@ -686,15 +1094,13 @@ const services = [
       ),
       var(--paper);
   }
-
-  .closing__eyebrow {
+  .closing__mark {
     font-family: var(--font-display);
     font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
     font-weight: 600;
     letter-spacing: var(--tracking-h2);
     color: var(--ink);
   }
-
   .closing__line {
     font-family: var(--font-body);
     font-size: var(--fs-small);
@@ -719,7 +1125,6 @@ const services = [
     border-bottom-right-radius: 11px;
     background: linear-gradient(180deg, #c9c8c4, #a7a6a1 60%, #87867f);
   }
-
   .laptop__hinge {
     position: absolute;
     top: 0;
@@ -732,29 +1137,88 @@ const services = [
     background: #8b8a84;
   }
 
+  /* ---- Small per-beat caption: sits just BELOW the device, centered,
+     small and subtle. Never covers the laptop, never clips at the edge.
+     ABSOLUTELY positioned in a reserved gap so it is OUT of normal flow and
+     can never shift the content below it (zero CLS). ---- */
+  .showcase__capspace {
+    /* reserves the vertical room the caption occupies, in flow. Only present
+       when the demo runs; collapsed otherwise so the static layout is compact
+       and nothing shifts. */
+    width: 100%;
+    height: 0;
+  }
+  :global(.js-motion) .showcase__capspace {
+    height: clamp(3rem, 2.4rem + 1.5vw, 4.25rem);
+  }
   .showcase__caption {
-    margin-top: var(--space-24);
+    position: absolute;
+    z-index: 7;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 100%;
+    height: clamp(3rem, 2.4rem + 1.5vw, 4.25rem);
+    display: none;
+    place-items: center;
+    pointer-events: none;
+  }
+  .showcase.is-live .showcase__caption {
+    display: grid;
+  }
+  .cap {
+    grid-area: 1 / 1; /* stack all captions in one cell; GSAP fades between */
+    margin: 0;
+    display: grid;
+    gap: 0.25em;
+    justify-items: center;
+    align-content: center;
+    text-align: center;
+    max-width: 34ch;
+    padding-inline: var(--gutter);
+    opacity: 0;
+  }
+  .cap__kicker {
+    font-family: var(--font-body);
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .cap__line {
+    font-size: var(--fs-small);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+
+  .showcase__credit {
+    margin-top: var(--space-48);
     font-size: var(--fs-small);
     color: var(--ink-3);
     text-align: center;
   }
-  .showcase__caption strong {
+  .showcase__credit strong {
     color: var(--ink-2);
     font-weight: 600;
   }
 
-  /* ---- Static / a11y service list (below the laptop) ---- */
+  /* ---- Static / a11y feature list (below the laptop) ---- */
   .showcase__list {
     width: 100%;
-    max-width: var(--container);
+    margin-inline: auto;
     margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+    padding-bottom: var(--section-y);
     list-style: none;
-    padding: 0;
     display: grid;
     gap: var(--space-24) var(--space-48);
     grid-template-columns: 1fr;
   }
-
+  /* When motion is available the demo replaces the list — hidden BEFORE first
+     paint (via .js-motion) so removing it never shifts the page (CLS = 0). */
+  :global(.js-motion) .showcase__list {
+    display: none;
+  }
   @media (min-width: 720px) {
     .showcase__list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -771,7 +1235,6 @@ const services = [
     gap: var(--space-16);
     align-items: flex-start;
   }
-
   .svc__num {
     flex: none;
     font-family: var(--font-display);
@@ -782,7 +1245,6 @@ const services = [
     padding-top: 2px;
     min-width: 2ch;
   }
-
   .svc__title {
     font-family: var(--font-display);
     font-size: var(--fs-h3);
@@ -791,7 +1253,6 @@ const services = [
     letter-spacing: var(--tracking-h3);
     color: var(--ink);
   }
-
   .svc__body {
     margin-top: var(--space-8);
     font-size: var(--fs-small);
@@ -801,24 +1262,15 @@ const services = [
   }
 
   /* =====================================================================
-     LIVE STATE: GSAP loaded. It drives transform/opacity inline. The
-     redundant static service list is hidden (the screen now plays the
-     slides), and the closing frame's default opacity is handed to GSAP.
+     LIVE STATE: GSAP loaded. It drives transform/opacity/clip inline. The
+     redundant static list is hidden (the screen now plays the demo), and
+     the closing frame's default opacity is handed to GSAP.
      ===================================================================== */
-  .showcase.is-live .showcase__list {
-    display: none;
-  }
   .showcase.is-live .showcase__scrollhint {
     opacity: 1;
   }
   .showcase.is-live .closing {
     opacity: 0; /* GSAP reveals it on the final beat */
-  }
-  /* The slides CONTAINER is opacity:0 in the static end-state (so the closing
-     frame reads clean). Once live, hand it to GSAP — which controls each child
-     .slide's autoAlpha individually — by restoring the container to full. */
-  .showcase.is-live .slides {
-    opacity: 1;
   }
   .showcase.is-live .showcase__device {
     will-change: transform;
@@ -827,8 +1279,7 @@ const services = [
   /* =====================================================================
      REDUCED MOTION: settled end-state, no scrub. The JS island bails
      before building, so static styles already apply; this guarantees the
-     device sits flat and the service list stays visible even if a stray
-     inline style slipped through.
+     device sits flat and the feature list stays visible.
      ===================================================================== */
   @media (prefers-reduced-motion: reduce) {
     .showcase__device {

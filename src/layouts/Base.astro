@@ -143,6 +143,15 @@ const jsonLd = {
       if (!CSS.supports("animation-timeline: view()")) {
         document.documentElement.classList.add("no-scroll-timeline");
       }
+      // Flag that scripting + motion are available BEFORE first paint, so any
+      // scrubbed island can reserve its scroll track in the initial layout
+      // (zero post-paint CLS). Gated on prefers-reduced-motion so the reduced
+      // path keeps the compact, settled static layout.
+      if (
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        document.documentElement.classList.add("js-motion");
+      }
     </script>
   </head>
   <body>
