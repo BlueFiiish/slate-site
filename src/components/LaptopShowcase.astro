@@ -106,6 +106,11 @@ const features = [
           <!-- THE DEVICE: pinned, zooming, tilting, flipping (pronounced 3D). -->
           <div class="showcase__device" data-showcase-device>
             <div class="showcase__glow" aria-hidden="true"></div>
+            <!-- Grounding shadow: a layered, soft, DIRECTIONAL contact shadow +
+                 ambient occlusion so the device reads as a solid object sitting
+                 in real light (not a flat uniform blur). Shrinks with the morph
+                 so the phone casts a tighter shadow than the laptop. -->
+            <div class="showcase__shadow" data-device-shadow aria-hidden="true"></div>
 
             <!-- Corner reticle brackets + connector HUD label, around device. -->
             <div class="reticle" data-reticle aria-hidden="true">
@@ -121,12 +126,30 @@ const features = [
               </span>
             </div>
 
-            <!-- LAPTOP — the hero. The SAME frame morphs into a phone (beat 3)
-                 by narrowing + clipping + rounding; base folds away. -->
+            <!-- LAPTOP — the hero. The SAME aluminum frame morphs into a phone
+                 (beat 3) by narrowing + clipping + rounding; base folds away.
+                 Realism is built in animatable CSS/SVG (layered metal gradients,
+                 chamfered edge speculars, a glass glare sweep) so the body can
+                 still morph + spin as a solid object. -->
             <figure class="laptop" data-laptop>
+              <!-- The unibody aluminum lid. Its surface is layered gradients
+                   (anodized space-grey) + an edge chamfer (::before/::after) +
+                   a moving edge-specular that catches as the device turns. -->
               <div class="laptop__bezel" data-bezel>
+                <!-- glass cover: inner bezel shadow (screenshot sits UNDER glass)
+                     + a faint edge vignette + a diagonal glare sweep that shifts
+                     with rotation (driven by --spin from GSAP). -->
+                <span class="laptop__glass" data-glass aria-hidden="true"></span>
                 <span class="laptop__cam" aria-hidden="true"></span>
-                <span class="laptop__notch" data-notch aria-hidden="true"></span>
+                <!-- iPhone Dynamic Island (fades in at the morph) -->
+                <span class="laptop__notch" data-notch aria-hidden="true">
+                  <span class="laptop__island-cam" aria-hidden="true"></span>
+                </span>
+                <!-- iPhone side buttons — drawn outside the screen column edges,
+                     revealed only as the body becomes a phone (--morph). -->
+                <span class="phonebtn phonebtn--vol-a" aria-hidden="true"></span>
+                <span class="phonebtn phonebtn--vol-b" aria-hidden="true"></span>
+                <span class="phonebtn phonebtn--power" aria-hidden="true"></span>
                 <div class="laptop__screen" data-screen>
                   <!-- == FRAME: hero (pan/zoom across the bespoke design) == -->
                   <div class="frame" data-frame="hero" data-active>
@@ -244,8 +267,13 @@ const features = [
                   <span class="screen__scanline" data-screenscan aria-hidden="true"></span>
                 </div>
               </div>
+              <!-- The keyboard deck + hinge. A realistic aluminum base with a
+                   slim hinge, a tapered front lip, and a faint wordmark hint on
+                   the chin. Folds away (scaleX + alpha) during the phone morph. -->
               <div class="laptop__base" data-base aria-hidden="true">
                 <span class="laptop__hinge"></span>
+                <span class="laptop__deck"></span>
+                <span class="laptop__lip"></span>
               </div>
             </figure>
           </div>
@@ -346,6 +374,7 @@ const features = [
       const notch = q("[data-notch]");
       const hint = q("[data-showcase-hint]");
       const closing = q("[data-closing]");
+      const deviceShadow = q("[data-device-shadow]");
       if (!track || !device || !laptop || !bezel || !screen) return;
 
       const frame = (name: string) => q(`[data-frame="${name}"]`);
@@ -418,6 +447,24 @@ const features = [
         if (screenScan) gsap.set(screenScan, { yPercent: -120, autoAlpha: 0 });
         setHud("RENDER", "READY");
 
+        // Mirror the device's LIVE 3D rotation into the bezel's --spin custom
+        // property so the brushed-metal sheen + the glass glare slide across the
+        // surface as the object physically turns (catches a moving specular).
+        // Also mirror --morph onto the grounding shadow so the phone's footprint
+        // tightens. Cheap: two custom-prop writes per scrub frame, no layout.
+        const syncSurfaces = () => {
+          const ry = (gsap.getProperty(device, "rotateY") as number) || 0;
+          bezel!.style.setProperty("--spin", String(ry));
+          if (deviceShadow) {
+            const m = (gsap.getProperty(bezel, "--morph") as number) || 0;
+            deviceShadow.style.setProperty("--morph", String(m));
+            // the shadow softens + lifts slightly as the lid turns away
+            deviceShadow.style.opacity = String(
+              Math.max(0.35, 1 - Math.abs(ry) / 120)
+            );
+          }
+        };
+
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
@@ -426,6 +473,7 @@ const features = [
             end: "bottom bottom",
             scrub: 0.7,
             invalidateOnRefresh: true,
+            onUpdate: syncSurfaces,
           },
         });
 
@@ -799,7 +847,7 @@ const features = [
   .showcase__glow {
     position: absolute;
     inset: -18% -12% -24%;
-    z-index: -1;
+    z-index: -2;
     background: radial-gradient(
         58% 52% at 60% 32%,
         var(--accent-glow) 0%,
@@ -811,6 +859,50 @@ const features = [
         transparent 70%
       );
     filter: blur(14px);
+  }
+
+  /* Layered grounding shadow: a TIGHT, dark contact band right under the device
+     (ambient occlusion) over a BROADER, softer directional drop offset down/
+     right (the key light comes from upper-left). Two stacked radial gradients
+     = directional, not a single uniform blur. Tracks --morph so the phone's
+     footprint is narrower than the laptop's. Sits behind the device. */
+  .showcase__shadow {
+    --morph: 0;
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    bottom: calc(-7% + 1% * var(--morph));
+    width: calc((96% - 52% * var(--morph)));
+    height: 16%;
+    transform: translateX(-50%);
+    background:
+      /* broad soft directional drop (key light upper-left -> shadow lower-right) */
+      radial-gradient(
+        60% 100% at 56% 0%,
+        rgba(0, 0, 0, 0.5) 0%,
+        rgba(0, 0, 0, 0.22) 42%,
+        transparent 78%
+      );
+    filter: blur(10px);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  /* the tight AO contact band */
+  .showcase__shadow::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 8%;
+    width: 70%;
+    height: 38%;
+    transform: translateX(-50%);
+    background: radial-gradient(
+      50% 100% at 50% 0%,
+      rgba(0, 0, 0, 0.7) 0%,
+      transparent 75%
+    );
+    filter: blur(5px);
+    border-radius: 50%;
   }
 
   /* ---- Corner reticle / HUD label around the device ---- */
@@ -922,72 +1014,214 @@ const features = [
      FIXED full-width laptop rectangle (so nothing ever reflows -> CLS = 0). The
      laptop -> phone shape change is delivered purely by CLIP-PATH (paint-only,
      never a layout shift): the wide rectangle is squeezed to a centered phone
-     column with rounded corners as --morph -> 1. */
+     column with rounded corners as --morph -> 1.
+
+     REALISM: the lid is a real anodized space-grey ALUMINUM unibody — multiple
+     stacked gradients (broad top-light falloff + a soft sheen band + a subtle
+     vertical brushed grain), a CHAMFERED bright edge (the ::before ring), and a
+     deep base color. Everything is paint (gradients + box-shadow), never a
+     filter/blur on the body, so it stays cheap AND morphs/spins as one solid. */
   .laptop__bezel {
     --morph: 0;
+    /* --spin: GSAP feeds the device's live rotateY here (deg). The glass glare
+       + edge specular read it so reflections shift as the object turns. */
+    --spin: 0;
     /* clip insets: at morph 1, carve left/right to ~34.5% each -> ~31% column;
-       corner radius grows. Paint-only; zero layout impact. */
+       corner radius grows toward an iPhone radius. Paint-only; zero layout. */
     --bz-inset-x: calc(34.5% * var(--morph));
-    --bz-radius: calc(20px + 22px * var(--morph));
+    --bz-radius: calc(22px + 26px * var(--morph));
     position: relative;
     width: 100%;
     margin-inline: auto;
-    border-radius: 20px;
-    padding: 12px;
-    background: linear-gradient(160deg, #20262f, #0e131a);
-    box-shadow: var(--shadow-3),
+    border-radius: 22px;
+    /* bezel thickness: slim modern MacBook lid; narrows a touch toward a phone
+       so the iPhone's uniform thin border reads correctly. */
+    padding: calc(11px - 2px * var(--morph));
+    /* Anodized space-grey aluminum: a brushed grain + a diagonal sheen band +
+       the broad body falloff. The sheen band's position tracks --spin so the
+       metal "catches the light" mid-turn. */
+    background:
+      /* fine vertical brushed-metal grain */
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.014) 0px,
+        rgba(255, 255, 255, 0.014) 1px,
+        rgba(0, 0, 0, 0.02) 1px,
+        rgba(0, 0, 0, 0.02) 2px
+      ),
+      /* moving diagonal sheen — shifts with rotation */
+      linear-gradient(
+        calc(118deg + var(--spin) * 0.6deg),
+        transparent 0%,
+        rgba(255, 255, 255, 0.06) calc(40% + var(--spin) * 0.4%),
+        rgba(255, 255, 255, 0.11) calc(50% + var(--spin) * 0.4%),
+        transparent calc(62% + var(--spin) * 0.4%)
+      ),
+      /* broad anodized body: top-lit space grey -> deep charcoal */
+      linear-gradient(157deg, #3a424f 0%, #262d38 30%, #1a212b 62%, #0e131b 100%);
+    box-shadow:
+      /* top chamfer highlight + bottom seat — sells the metal thickness */
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.16),
+      inset 0 -1.5px 0 rgba(0, 0, 0, 0.5),
+      var(--shadow-3),
       0 0 calc(40px * var(--morph)) -8px var(--accent-glow);
     clip-path: inset(
       0 var(--bz-inset-x) 0 var(--bz-inset-x) round var(--bz-radius)
     );
     will-change: clip-path;
   }
-  /* hairline accent edge — drawn INSIDE the clip so it follows the phone column */
-  .laptop__bezel::after {
+  /* CHAMFERED EDGE — a crisp bright bevel around the lid, drawn INSIDE the clip
+     so it follows the phone column on morph. Two-tone (light top-left, dark
+     bottom-right) reads as a real machined aluminum edge. */
+  .laptop__bezel::before {
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: 20px;
-    border: 1px solid color-mix(in srgb, var(--hairline-strong) 80%, transparent);
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.08) 22%,
+      transparent 45%,
+      transparent 60%,
+      rgba(0, 0, 0, 0.45) 100%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
     pointer-events: none;
+    z-index: 6;
+  }
+  /* inner hairline seat where the glass meets the metal */
+  .laptop__bezel::after {
+    content: "";
+    position: absolute;
+    inset: calc(10px - 2px * var(--morph));
+    border-radius: calc(11px + 18px * var(--morph));
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55),
+      0 1px 1px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 5;
   }
 
+  /* MacBook camera dot (slim-bezel notch cam). Fades out as it becomes a phone. */
   .laptop__cam {
     position: absolute;
-    top: 6px;
+    top: 5px;
     left: 50%;
     transform: translateX(-50%);
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #2a2f38;
-    z-index: 4;
+    background: radial-gradient(circle at 40% 35%, #3a4250, #0a0d12 70%);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
+      0 0 2px rgba(0, 0, 0, 0.6);
+    z-index: 7;
     opacity: calc(1 - var(--morph)); /* fades as it becomes a phone */
   }
-  /* phone notch — fades in via GSAP autoAlpha at the morph beat */
+  /* iPhone Dynamic Island — a true pill, fades in via GSAP autoAlpha at morph */
   .laptop__notch {
     position: absolute;
-    z-index: 5;
-    top: calc(2px + 2px);
+    z-index: 8;
+    top: 13px;
     left: 50%;
     transform: translateX(-50%);
-    width: 34%;
-    height: 7px;
+    width: 26%;
+    height: 13px;
     border-radius: var(--radius-pill);
-    background: #05080c;
+    background: #04070b;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+  }
+  .laptop__island-cam {
+    position: absolute;
+    top: 50%;
+    right: 16%;
+    width: 5px;
+    height: 5px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #1b3a4a, #04070b 72%);
+    box-shadow: inset 0 0 0 0.5px rgba(90, 160, 180, 0.25);
+  }
+
+  /* ---- iPhone side buttons — only visible as a phone (opacity tied to morph).
+     Positioned at the screen column edges (~34.5% in from each side). ---- */
+  .phonebtn {
+    position: absolute;
+    z-index: 4;
+    width: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #3a424f, #1a212b);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 0 2px rgba(0, 0, 0, 0.5);
+    opacity: calc(var(--morph) * var(--morph)); /* appear late in the morph */
+    pointer-events: none;
+  }
+  .phonebtn--vol-a {
+    left: calc(34.5% - 3px);
+    top: 30%;
+    height: 7%;
+  }
+  .phonebtn--vol-b {
+    left: calc(34.5% - 3px);
+    top: 40%;
+    height: 7%;
+  }
+  .phonebtn--power {
+    right: calc(34.5% - 3px);
+    top: 33%;
+    height: 11%;
   }
 
   .laptop__screen {
     position: relative;
     overflow: hidden;
-    border-radius: calc(9px + 18px * var(--morph));
-    background: var(--bg);
+    border-radius: calc(11px + 22px * var(--morph));
+    background: #05080c;
     /* FIXED 16:10 flow box (never changes -> zero reflow / zero CLS). The phone
        shape is delivered by clip-path on the BEZEL (paint-only) carving a
        centered column; the mobile screenshot is shown as a centered portrait
        column that lands exactly inside that clip window. */
     aspect-ratio: 16 / 10;
     isolation: isolate;
+  }
+
+  /* ---- GLASS: the screenshot sits UNDER glass. A faint edge vignette + an
+     inner top highlight + a diagonal glare sweep whose position shifts with
+     --spin (so the glare slides across the panel as the device rotates). All
+     paint; no filters. Sits above the frames, below the HUD scanline. ---- */
+  .laptop__glass {
+    position: absolute;
+    z-index: 9; /* above the frames inside the screen */
+    inset: calc(10px - 2px * var(--morph));
+    border-radius: calc(11px + 20px * var(--morph));
+    pointer-events: none;
+    background:
+      /* moving diagonal glare band */
+      linear-gradient(
+        calc(122deg + var(--spin) * 1deg),
+        transparent calc(28% + var(--spin) * 0.6%),
+        rgba(255, 255, 255, 0.07) calc(43% + var(--spin) * 0.6%),
+        rgba(255, 255, 255, 0.12) calc(49% + var(--spin) * 0.6%),
+        rgba(255, 255, 255, 0.03) calc(55% + var(--spin) * 0.6%),
+        transparent calc(70% + var(--spin) * 0.6%)
+      ),
+      /* faint top-edge light catch */
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 12%
+      );
+    /* inner edge darkening (glass vignette) + a hairline where glass meets bezel */
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    mix-blend-mode: screen;
+  }
+  .showcase.is-live .laptop__glass {
+    opacity: 1; /* present statically too — sells the glass without JS */
   }
 
   /* ---- Screenshot frames ---- */
@@ -1356,12 +1590,16 @@ const features = [
     color: var(--accent-dim);
   }
 
+  /* under-glass inner shadow: the screenshot sits beneath the cover glass, so a
+     soft inner darkening rings the panel + a crisp 1px inner edge seats it. */
   .screen__vignette {
     position: absolute;
     z-index: 5;
     inset: 0;
     pointer-events: none;
-    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.42),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+      inset 0 1px 2px rgba(0, 0, 0, 0.5);
     border-radius: inherit;
   }
   /* a thin cyan scanline that sweeps the screen on beat changes */
@@ -1382,27 +1620,64 @@ const features = [
     mix-blend-mode: screen;
   }
 
-  /* ---- Laptop base — folds away during the phone morph ---- */
+  /* ---- Laptop base — realistic aluminum keyboard deck. Folds away (scaleX +
+     alpha) during the phone morph. Built from three layers: the hinge barrel,
+     the deck slab (with a top-edge specular + wordmark hint), and the tapered
+     front lip that catches light. ---- */
   .laptop__base {
     position: relative;
-    height: 15px;
-    width: 107%;
+    height: 16px;
+    width: 113%;
     margin-inline: auto;
-    border-bottom-left-radius: 11px;
-    border-bottom-right-radius: 11px;
-    background: linear-gradient(180deg, #3a4150, #232a34 60%, #161b22);
     transform-origin: 50% 0;
+    will-change: transform;
   }
+  /* the hinge barrel sits just under the lid */
   .laptop__hinge {
     position: absolute;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 16%;
-    height: 6px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    background: #2c333d;
+    width: 17%;
+    height: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background: linear-gradient(180deg, #11161d 0%, #20262f 100%);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+  }
+  /* the deck slab — anodized aluminum, top-lit, slight side falloff. The
+     wordmark hint is a faint centered radial sheen (an Apple-logo suggestion). */
+  .laptop__deck {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    right: 0;
+    height: 11px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    background:
+      radial-gradient(
+        2.2em 1.4em at 50% 4px,
+        rgba(255, 255, 255, 0.06) 0%,
+        transparent 70%
+      ),
+      linear-gradient(180deg, #41495a 0%, #2b3340 36%, #1b212b 78%, #10151d 100%),
+      linear-gradient(90deg, #161b24 0%, #2a313d 16%, #2a313d 84%, #161b24 100%);
+    background-blend-mode: screen, normal, multiply;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  }
+  /* the tapered front lip — the bright machined chamfer at the laptop's front */
+  .laptop__lip {
+    position: absolute;
+    bottom: 0;
+    left: 8%;
+    right: 8%;
+    height: 3px;
+    border-radius: 0 0 8px 8px;
+    background: linear-gradient(180deg, #4b5466 0%, #2a313d 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   }
 
   /* ---- Caption: reserved room BELOW the device; ALWAYS fully visible ---- */
